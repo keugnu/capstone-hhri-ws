@@ -1,4 +1,5 @@
 byte[] request
+int8 size
 ---
 bool success
 byte[] data
