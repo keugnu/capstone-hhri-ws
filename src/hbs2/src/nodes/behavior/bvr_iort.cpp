@@ -117,6 +117,8 @@ int main(int argc, char *argv[]) {
 		case 2: {
 		    ROS_INFO("A request for tts has been made.");
 		    rest_req(resp, get_tts_uri);
+		    ss << resp.content;
+		    msg.data = ss.str();
 		}
 		case 3: {
 		    ROS_INFO("A request to shake the robot's head has been made.");
