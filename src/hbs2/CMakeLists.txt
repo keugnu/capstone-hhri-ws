@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hbs2)
 
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
@@ -12,10 +13,12 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
 )
+find_package(PkgConfig REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
+pkg_check_modules(CURLPP REQUIRED curlpp)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -95,7 +98,7 @@ catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES hbs2
   CATKIN_DEPENDS message_runtime std_msgs
-#  DEPENDS system_lib
+  DEPENDS CURLPP 
 )
 
 ###########
@@ -104,7 +107,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${CURLPP_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -122,6 +125,8 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 # add_executable(${PROJECT_NAME}_node src/hbs2_node.cpp)
 
 add_executable(hbs2_i2c_mgr src/nodes/service/i2c_mgr.cpp)
+add_executable(mcp9808 src/nodes/hardware/MCP9808.cpp)
+add_executable(iort src/nodes/behavior/bvr_iort.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -133,7 +138,9 @@ add_executable(hbs2_i2c_mgr src/nodes/service/i2c_mgr.cpp)
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(hbs2_i2c_mgr ${catkin_EXPORTED_TARGETS})
+#add_dependencies(hbs2_i2c_mgr ${catkin_EXPORTED_TARGETS})
+#add_dependencies(mcp9808 ${catkin_EXPORTED_TARGETS})
+#add_dependencies(iort ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -141,6 +148,8 @@ add_dependencies(hbs2_i2c_mgr ${catkin_EXPORTED_TARGETS})
 # )
 
 target_link_libraries(hbs2_i2c_mgr ${catkin_LIBRARIES})
+target_link_libraries(mcp9808 ${catkin_LIBRARIES})
+target_link_libraries(iort ${catkin_LIBRARIES} curl curlpp)
 
 #############
 ## Install ##
