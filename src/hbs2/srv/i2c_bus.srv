@@ -1,5 +1,5 @@
-byte[] request
+int8[] request
 int8 size
 ---
 bool success
-byte[] data
+int8[] data
