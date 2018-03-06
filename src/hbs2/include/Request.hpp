@@ -25,21 +25,23 @@ class Request {
 };
 
 Request::Request(const std::vector<signed char> req, int num_bytes) {
-
     switch (req[0]) {
-        case '0':
+        case 0:
             _type = "status";
-        case '1':
+	    break;
+        case 1:
             _type = "read";
-        case '2':
+	    break;
+        case 2:
             _type = "write";
+	    break;
     }
 
     _id = req[1];
     _status = false;
     _size = num_bytes;
 
-    for (int i = 0; i < _size; i++) { data.push_back(req[i + 2]); }
+    for (int i = 0; i < _size - 2; i++) { data.push_back(req[i + 2]); }
 
 }
 
