@@ -3,7 +3,7 @@ project(hbs2)
 
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+add_compile_options(-std=c++14 -g)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -53,7 +53,13 @@ pkg_check_modules(CURLPP REQUIRED curlpp)
 # add_message_files(FILES i2c_bus.msg)
 
 ## Generate services in the 'srv' folder
-add_service_files(FILES i2c_bus.srv)
+add_service_files(FILES
+    i2c_bus.srv
+    iot.srv
+    sonar.srv
+    tts.srv
+    servo.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -126,7 +132,9 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${CURLPP_INCLUDE_DIRS})
 
 add_executable(hbs2_i2c_mgr src/nodes/service/i2c_mgr.cpp)
 add_executable(mcp9808 src/nodes/hardware/MCP9808.cpp)
+add_executable(srf02 src/nodes/hardware/SRF02.cpp)
 add_executable(iort src/nodes/behavior/bvr_iort.cpp)
+add_executable(iot_srv src/nodes/service/iot_srv.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -149,7 +157,10 @@ add_executable(iort src/nodes/behavior/bvr_iort.cpp)
 
 target_link_libraries(hbs2_i2c_mgr ${catkin_LIBRARIES})
 target_link_libraries(mcp9808 ${catkin_LIBRARIES})
+target_link_libraries(srf02 ${catkin_LIBRARIES})
 target_link_libraries(iort ${catkin_LIBRARIES} curl curlpp)
+target_link_libraries(iot_srv ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##

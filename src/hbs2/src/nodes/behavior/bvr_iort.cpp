@@ -17,6 +17,7 @@
 // ROS
 #include "std_msgs/String.h"
 #include "ros/ros.h"
+#include "hbs2/iot.h"
 
 
 #define MAX_FILE_LENGTH 20000
@@ -82,56 +83,92 @@ void rest_req(Response &resp, std::string uri) {
 }
 
 
-int main(int argc, char *argv[]) {
+void begin(ros::NodeHandle &n) {
     m_pBuffer = (char*) malloc(MAX_FILE_LENGTH * sizeof(char));
     Response resp;
     char const* get_cmd_uri = "http://127.0.0.1/api/getcommand";
     char const* get_tts_uri = "http://127.0.0.1/api/gettts";
+    char const* set_resp_uri = "http://127.0.0.1/api/setdata";
     static int last_command = 0;
-    std_msgs::String msg;
-    std::stringstream ss;
+    m_pBuffer = NULL;
+    m_Size = 0;
+    resp.content = "";
+    resp.size = 0;
+    resp.code = 0;
 
+    ros::ServiceClient iot_client = n.serviceClient<hbs2::iot>("iot_srv");
+    hbs2::iot srv_iot;
+
+    rest_req(resp, get_cmd_uri);
+
+    if (resp.code == 200 && last_command != m_pBuffer[0]) {
+        ROS_INFO("A new command has been made.");
+        last_command = m_pBuffer[0];
+
+        switch (m_pBuffer[0]) {
+            case 1: {
+	        ROS_INFO("A request to read the sonar sensor has been made.");
+                /*  send request to iot_srv
+                    req.request.command = 1
+
+                    check for success and return data back to api client
+                    if res.response.success == true
+                        create rest_req(resp, set_resp_uri)
+                */
+                srv_iot.request.command = 1;
+                iot_client.call(srv_iot);
+                if (srv_iot.response.success == true) {
+                    ROS_INFO("Sending sonar data to remote.");
+                    rest_req(resp, set_resp_uri);
+                }
+                else { ROS_ERROR("Request to iot_srv for reading sonar failed."); }
+                break;
+	    }
+	    case 2: {
+	        ROS_INFO("A request for tts has been made.");
+	        rest_req(resp, get_tts_uri);
+                /*  send request to iot_srv
+                    req.request.command = 2
+                    req.request.text = resp.content
+
+                    check for success
+                    res.resonse.success == true
+                */
+                srv_iot.request.command = 2;
+                srv_iot.request.text = resp.content;
+                iot_client.call(srv_iot);
+                if (srv_iot.response.success ==  true) { ROS_INFO("Request for TTS completed."); }
+                else { ROS_ERROR("Request to iot_srv for TTS has failed."); }
+                break;
+	    }
+	    case 3: {
+	        ROS_INFO("A request to shake the robot's head has been made.");
+                /*  send request to iot_srv
+                    req.request.command = 3
+                
+                    check for success
+                    if res.response.success == true
+                */
+                srv_iot.request.command = 3;
+                iot_client.call(srv_iot);
+                if (srv_iot.response.success ==  true) { ROS_INFO("Request to shake head completed."); }
+                else { ROS_ERROR("Request to iot_srv to shake head has failed."); }
+                break;
+	    }
+	}
+    }
+}
+
+
+int main(int argc, char *argv[]) {
     ros::init(argc, argv, "iort");
     ros::NodeHandle n;
-    ros::Publisher iort_tts_pub = n.advertise<std_msgs::String>("tts", 10);
     ros::Rate loop_rate(10);
     
     while(ros::ok()) {
-        m_pBuffer = NULL;
-        m_Size = 0;
-        resp.content = "";
-        resp.size = 0;
-        resp.code = 0;
-	rest_req(resp, get_cmd_uri);
-
-	if (resp.code == 200 && last_command != m_pBuffer[0]) {
-	    ROS_INFO("A new command has been made.");
-	    last_command = m_pBuffer[0];
-	    ss << resp.content;
-	    msg.data = ss.str();
-
-	    switch (m_pBuffer[0]) {
-		case 1: {
-		    ROS_INFO("A request to read the sonar sensor has been made.");
-		}
-		case 2: {
-		    ROS_INFO("A request for tts has been made.");
-		    rest_req(resp, get_tts_uri);
-		    ss << resp.content;
-		    msg.data = ss.str();
-		}
-		case 3: {
-		    ROS_INFO("A request to shake the robot's head has been made.");
-		}
-	    }
-	    ROS_INFO("Publishing %s to [tts] topic.", msg.data.c_str());
-	    iort_tts_pub.publish(msg);
-	}
-        
+        begin(n);
         ros::spinOnce();
 	loop_rate.sleep();
     }
-    
     return 0;
 }
-
