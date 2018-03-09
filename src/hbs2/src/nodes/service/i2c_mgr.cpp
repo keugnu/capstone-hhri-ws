@@ -105,11 +105,15 @@ bool handle_req(hbs2::i2c_bus::Request &req, hbs2::i2c_bus::Response &res) {
 		res.data = job.data;
 		res.success = true;
 	    }
-	    else { work_queue.push(job); }
+	    else { //work_queue.push(job);
+                ROS_ERROR("Read request for device %u failed.", job.get_id());
+            }
 	}
 	else if (job.get_type() == "write") { 
 	    if (write_req(&job)) { completed_queue.push(job); res.success = true; }
-	    else { work_queue.push(job); }
+	    else { //work_queue.push(job);
+                ROS_ERROR("Write request for device %u failed.", job.get_id());
+            }
 
     	}
     }
@@ -121,7 +125,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle n;
 
     ros::ServiceServer srv = n.advertiseService("i2c_srv", handle_req);
-    ROS_INFO("ROS I2c Bus Manager has started.");
+    ROS_INFO("ROS I2C Bus Manager has started.");
     ros::spin();
     return 0;
 }
