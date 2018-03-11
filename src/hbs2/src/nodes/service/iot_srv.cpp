@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <iostream>
-#include <boost/bind.hpp>
+#include <functional>
 
 // ROS
 #include "ros/ros.h"
@@ -12,10 +12,11 @@
 #include "hbs2/servo.h"
 
 
-ros::NodeHandle* n = new ros::NodeHandle;
+ros::NodeHandlePtr n = NULL;
 
 
 bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
+    ROS_INFO("Serving request from [iort] node.");
     
     ros::ServiceClient sonar_client = n->serviceClient<hbs2::sonar>("sonar_srv");
     ros::ServiceClient tts_client = n->serviceClient<hbs2::tts>("tts_srv");
@@ -70,11 +71,12 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "iot_srv");
-    ros::NodeHandle nh = *n;
+    n = ros::NodeHandlePtr(new ros::NodeHandle);
 
     ros::ServiceServer srv = n->advertiseService("iot_srv", handle_req);
 
     ROS_INFO("ROS IoT Service has started.");
+    ros::Rate loop_rate(10);
     ros::spin();
     return 0;
 }
