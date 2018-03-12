@@ -10,36 +10,38 @@ class Request {
         char _id;
         std::string _type;
         bool _status;
-	int _size;
-	int _expected;
+        int _size;
+        int _expected;
     public:
+        int num_attempts;
         std::vector<signed char> data;
-	
+    
         Request(const std::vector<signed char>, int);
         char get_id();
         std::string get_type();
         bool get_status();
-	void set_status(bool);
-	int get_size();
-	int get_expected();
+        void set_status(bool);
+        int get_size();
+        int get_expected();
 };
 
 Request::Request(const std::vector<signed char> req, int num_bytes) {
     switch (req[0]) {
         case 0:
             _type = "status";
-	    break;
+        break;
         case 1:
             _type = "read";
-	    break;
+        break;
         case 2:
             _type = "write";
-	    break;
+        break;
     }
 
     _id = req[1];
     _status = false;
     _size = num_bytes;
+    num_attempts = 0;
 
     for (int i = 0; i < _size - 2; i++) { data.push_back(req[i + 2]); }
 
