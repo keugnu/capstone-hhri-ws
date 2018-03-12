@@ -86,9 +86,9 @@ void rest_req(Response &resp, std::string uri) {
 void begin(ros::NodeHandle &n) {
     m_pBuffer = (char*) malloc(MAX_FILE_LENGTH * sizeof(char));
     Response resp;
-    char const* get_cmd_uri = "http://127.0.0.1/api/getcommand";
-    char const* get_tts_uri = "http://127.0.0.1/api/gettts";
-    char const* set_resp_uri = "http://127.0.0.1/api/setdata";
+    std::string get_cmd_uri = "http://127.0.0.1/api/getcommand";
+    std::string get_tts_uri = "http://127.0.0.1/api/gettts";
+    std::string set_resp_uri = "http://127.0.0.1/api/setdata?data=";
     static int last_command = 0;
     m_pBuffer = NULL;
     m_Size = 0;
@@ -119,7 +119,7 @@ void begin(ros::NodeHandle &n) {
                 iot_client.call(srv_iot);
                 if (srv_iot.response.success == true) {
                     ROS_INFO("Sending sonar data to remote.");
-                    rest_req(resp, set_resp_uri);
+                    rest_req(resp, set_resp_uri + std::to_string(srv_iot.response.data));
                 }
                 else { ROS_ERROR("Request to iot_srv for reading sonar failed."); }
                 break;
@@ -163,7 +163,7 @@ void begin(ros::NodeHandle &n) {
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "iort");
     ros::NodeHandle n;
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(0.5);
     
     while(ros::ok()) {
         begin(n);
