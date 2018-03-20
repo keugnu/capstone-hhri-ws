@@ -13,10 +13,20 @@
 #include "hbs2/i2c_bus.h"
 #include "std_msgs/UInt8.h"
 
+bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
+    srv.request.request.resize(4);
+    srv.request.size = 4;
+    srv.request.request = {0x00, 0x5A, 0x00, 0x00};
+    usleep(1000);
+    client.call(srv);
+    if(!srv.response.success) return false;
+    else return true;
+}
+
 // Perform soft reset and start with MPR121 in "Stop mode" to prevent random reads.
 bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
-    srv.request.request = {0x02, 0x5A, (signed char)0x80, 0x63}; //write to reg 0x80
+    srv.request.request = {0x02, 0x5A, (uint8_t)0x80, 0x63}; //write to reg 0x80
     srv.request.size = 4;
 
     if (client.call(srv)) {
@@ -126,32 +136,27 @@ uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     // Touch status register = 0x00
     srv.request.request = {0x01, 0x5A, 0x00, 0x00, 0x00, 0x00};
     if (client.call(srv)) {
-        ROS_INFO("srv.response.data: %x %x %x %x", srv.response.data.at(0), srv.response.data.at(1), srv.response.data.at(2), srv.response.data.at(3));
-        readTouch[0] = (uint16_t)(srv.response.data.at(0) << 8);
-        readTouch[0] |= (uint16_t)(srv.response.data.at(1));
-        readTouch[1] = (uint16_t)(srv.response.data.at(2) << 8);
-        readTouch[1] |= (uint16_t)(srv.response.data.at(3));
+        readTouch[0] = ((uint16_t)srv.response.data.at(1)) << 8;
+        readTouch[0] |= ((uint16_t)srv.response.data.at(0));
+        readTouch[1] = ((uint16_t)srv.response.data.at(3)) << 8;
+        readTouch[1] |= ((uint16_t)srv.response.data.at(2));
 
         currentlyTouched = readTouch[0];
         currentlyTouched |= readTouch[1] << 8;
         currentlyTouched &= 0x0FFF;
-
-        ROS_INFO("currentlyTouched: %X", currentlyTouched);
-
+        
         for(int i = 0; i < 12; i++) {
-            if ((currentlyTouched & (1 << i))) {// && !(wasTouched & (1 << i))) {
+            if ((currentlyTouched & (1 << i)) && !(wasTouched & (1 << i))) {
                 ROS_INFO("Pin %i was touched.\n", i);
                 return i; 
             }
-            /*if (!(currentlyTouched & (1 << i))) { //&& (wasTouched & (1 << i))) {
+            if (!(currentlyTouched & (1 << i)) && (wasTouched & (1 << i))) {
                 ROS_INFO("Pin %i was released. \n", i);
                 return i;
-            }*/
+            }
         }
     }
 
-    //wasTouched = currentlyTouched;
-    //usleep(50000);
     return 0;
 }
 

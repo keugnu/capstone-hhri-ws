@@ -26,8 +26,8 @@ bool write_req(Request* job) {
         return false;
     }
     else {
-        char to_write[job->data.size()] = {0};
-        char dev_addr = job->get_id();
+        uint8_t to_write[job->data.size()] = {0};
+        uint8_t dev_addr = job->get_id();
         for (int i = 0; i < job->data.size(); i++) {
             to_write[i] = job->data.at(i);
         }
@@ -44,13 +44,18 @@ bool write_req(Request* job) {
                 if (write(fd, to_write, job->data.size()) != job->data.size()) {
                     ROS_ERROR("Failed to write to the I2C bus. Trying again.");
                 }
-                else return true;
+                else {
+                    close(fd);
+                    return true;
+                }
             }
             ROS_WARN("Failed to write to the I2C bus three times. Returning unsuccessful status.");
+            close(fd);
             return false;
         } 
         else {
             job->set_status(true);
+            close(fd);
             return true;
         }
     }
@@ -60,12 +65,13 @@ bool read_req(Request* job) {
     ROS_INFO("A read request has been made for device %X", job->get_id());
     if ((fd = open(iic_dev, O_RDWR)) < 0) {
         ROS_ERROR("Failed to open I2C bus.");
+        close(fd);
         return false;
     }
     else {
-        char is_read[job->data.size()] = {0};
-        char read_reg[job->data.size()] = {0};
-        char dev_addr = job->get_id();
+        uint8_t is_read[job->data.size()] = {0};
+        uint8_t read_reg[job->data.size()] = {0};
+        uint8_t dev_addr = job->get_id();
 
         for (int i = 0; i < job->data.size(); i++) {
             is_read[i] = job->data.at(i);
@@ -86,16 +92,21 @@ bool read_req(Request* job) {
                 usleep(70000);
                 if (read(fd, read_reg, job->data.size()) != job->data.size())
                     ROS_ERROR("Failed to read from the I2C bus. Trying again.");
-                else return true;
+                else {
+                    close(fd);
+                    return true;
+                }
             }
             ROS_WARN("Failed to read from the I2C bus three times. Returning unsuccessful status.");
+            close(fd);
             return false; 
         }
         else {
             /* copy the device data into job.data. */
             job->data.resize(job->data.size());
-            memcpy(&job->data[0], &read_reg[0], job->data.size() * sizeof(char));
+            memcpy(&job->data[0], &read_reg[0], job->data.size() * sizeof(uint8_t));
             job->set_status(true);
+            close(fd);
             return true;
         }
     }

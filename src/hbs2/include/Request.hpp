@@ -7,17 +7,17 @@
 
 class Request {
     private:
-        char _id;
+        uint8_t _id;
         std::string _type;
         bool _status;
         int _size;
         int _expected;
     public:
         int num_attempts;
-        std::vector<signed char> data;
+        std::vector<uint8_t> data;
     
-        Request(const std::vector<signed char>, int);
-        char get_id();
+        Request(const std::vector<uint8_t>, int);
+        uint8_t get_id();
         std::string get_type();
         bool get_status();
         void set_status(bool);
@@ -25,7 +25,7 @@ class Request {
         int get_expected();
 };
 
-Request::Request(const std::vector<signed char> req, int num_bytes) {
+Request::Request(const std::vector<uint8_t> req, int num_bytes) {
     switch (req[0]) {
         case 0:
             _type = "status";
@@ -50,7 +50,7 @@ Request::Request(const std::vector<signed char> req, int num_bytes) {
 int Request::get_size() { return _size; }
 int Request::get_expected() { return _expected; }
 bool Request::get_status() { return _status; }
-char Request::get_id() { return _id; }
+uint8_t Request::get_id() { return _id; }
 std::string Request::get_type() { return _type; }
 void Request::set_status(bool status) { _status = status; }
 

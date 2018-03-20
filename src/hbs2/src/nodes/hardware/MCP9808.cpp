@@ -84,7 +84,8 @@ int main(int argc, char **argv) {
     hbs2::i2c_bus srv;
     ROS_INFO("ROS Node [mcp9808] has started.");
     if (write_init(client, srv)) {
-        for(int i = 0; i < 50; i++) {
+        while(1) {
+            usleep(1000000);
     	    float temperature = read_temp(client, srv);
 	    ROS_INFO("Temperature in Fahrenheit: %.2f\n", temperature);
 }       }
