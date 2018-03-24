@@ -1,9 +1,9 @@
 <launch>
-    <node pkg="hbs2" type="hbs2_i2c_mgr" required="true"/>
-    <node pkg="hbs2" type="iot_srv" />
-    <node pkg="hbs2" type="iort" />
-    <node pkg="hbs2" type="mcp9808" />
-    <node pkg="hbs2" type="mpr121" />
-    <node pkg="hbs2" type="srf02" />
-    <node pkg="hbs2" type="touch" />
+    <node pkg="hbs2" name="hbs2_i2c_mgr" type="hbs2_i2c_mgr" required="true"/>
+    <!-- node pkg="hbs2" name="iot_srv" type="iot_srv" / -->
+    <!-- node pkg="hbs2" name="iort" type="iort" / -->
+    <node pkg="hbs2" name="mcp9808" type="mcp9808" />
+    <!-- node pkg="hbs2" name="mpr121" type="mpr121" / -->
+    <!-- node pkg="hbs2" name="srf02" type="srf02" / -->
+    <!-- node pkg="hbs2" name="touch" type="touch" / -->
 </launch>
