@@ -35,7 +35,6 @@ bool change_speed(int spd)
 	std::stringstream ss;
 	ss << _MAESTRO_SPDCTRL_ << " " << _MAESTRO_DEV_ << " " << _MAESTRO_CHANNEL_ << " " << std::to_string(spd);
 	std::string syscomspd = ss.str();
-	ROS_WARN("%s", syscomspd.c_str());
 	if (system((syscomspd).c_str()) != 0) return false;
 	else return true;
 }
@@ -48,7 +47,6 @@ bool move(int pos)
 	std::stringstream ss;
 	ss <<  _MAESTRO_POSCTRL_ << " " << _MAESTRO_DEV_ << " " << _MAESTRO_CHANNEL_ << " " << std::to_string(pos);
 	std::string syscompos = ss.str();
-	ROS_WARN("%s", syscompos.c_str());
 	if (system((syscompos).c_str()) != 0) return false;
 	else return true;
 }
