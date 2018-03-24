@@ -45,7 +45,7 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
             ROS_INFO("Serving request for TTS.");
             srv_tts.request.text = req.text;
             tts_client.call(srv_tts);
-            if (srv_tts.response.success == true) { res.success = true; }
+            if (srv_tts.response.success) { res.success = true; }
             else {
                 ROS_ERROR("TTS Request failed in iot_srv.");
                 res.success = false;
@@ -55,7 +55,28 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
         }
         case 3: {
             ROS_INFO("Serving request to shake head.");
+            srv_servo.request.command = 2;
+            srv_servo.request.speed = 100;
+            if(servo_client.call(srv_servo)) {
+                ROS_INFO("Servo speed has changed to 100 RPM.");
+            }
+            else {
+                ROS_ERROR("Request to change speed of the servo has failed.");
+            }
+
+            for(int i = 1; i < 5; i++) {
+                srv_servo.request.command = 1;
+                if (i % 2)
+                    srv_servo.request.position = 60;
+                else
+                    srv_servo.request.position = 120;
+                servo_client.call(srv_servo);
+                usleep(200000);
+            }
+
+            srv_servo.request.position = 90;
             servo_client.call(srv_servo);
+
             if (srv_servo.response.success == true) { res.success = true; }
             else {
                 ROS_ERROR("Request to shake head has failed in iot_srv.");
