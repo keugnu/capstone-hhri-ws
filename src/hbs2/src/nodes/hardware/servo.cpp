@@ -88,6 +88,19 @@ bool handle_req(hbs2::servo::Request &req, hbs2::servo::Response &res)
 	}
 }
 
+bool init_pos() {
+	std::stringstream ss;
+	ss << _MAESTRO_POSCTRL_ << " " << _MAESTRO_DEV_ << " " << _MAESTRO_CHANNEL_ << " " << std::to_string(4500);
+	std::string syscompos = ss.str();
+	if(system(syscompos.c_str()) != 0) {
+		ROS_ERROR("Servo initialization to 90 degrees failed.");
+		return false;
+	}
+	else {
+		ROS_INFO("Servo initialization to 90 degrees complete.");
+		return true;
+	}
+}
 
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "servo");
@@ -96,7 +109,8 @@ int main(int argc, char** argv) {
 	ros::ServiceServer srv = n.advertiseService("servo_srv", handle_req);
 	ROS_INFO("ROS servo service has started.");
 	
-	ros::spin();
+	if(init_pos()) ros::spin();
+	else exit(1);
 	
 	return 0;
 }
