@@ -59,6 +59,7 @@ add_service_files(FILES
     sonar.srv
     tts.srv
     servo.srv
+    temp.srv
 )
 
 ## Generate actions in the 'action' folder
