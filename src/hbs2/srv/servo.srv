@@ -1,5 +1,5 @@
 uint8 command
-uint16 speed
-uint16 position
+uint8 speed
+uint8 position
 ---
 bool success
