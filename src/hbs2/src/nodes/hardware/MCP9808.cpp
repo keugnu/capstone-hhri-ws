@@ -4,19 +4,19 @@
 	if type = read req, dat1:N = 0
 */
 
-
+// System
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
 #include <vector>
 #include <iostream>
 
+// ROS
 #include "ros/ros.h"
 #include "hbs2/i2c_bus.h"
+#include "hbs2/temp.h"
 
+ros::NodeHandlePtr n = NULL;
 
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
@@ -63,15 +63,31 @@ float read_temp(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));
 
-	//std::vector<signed char> data(srv.response.data);
-	int temp = (((int)srv.response.data.at(0) & 0x1F) * 256 + (int)srv.response.data.at(1));
-	if (temp > 4095) { temp -= 8192; }
+        //std::vector<signed char> data(srv.response.data);
+        int temp = (srv.response.data.at(0) & 0x1F) * 256 + srv.response.data.at(1);
+        if (temp > 4095) { temp -= 8192; }
 
-	float fTemp = ((temp * 0.0625) * 1.8 + 32);
-	return fTemp;
+        return ((float)temp * 0.0625) * 1.8 + 32;
     }
     ROS_ERROR("Failed to call service i2c_srv.");
-    return -1;
+    return 1;
+}
+
+// Report temp
+bool report_temp(hbs2::temp::Request &req, hbs2::temp::Response &res) {
+    ros::ServiceClient client = n->serviceClient<hbs2::i2c_bus>("i2c_srv");
+    hbs2::i2c_bus srv;
+
+    if (write_init(client, srv)) {
+        float temperature = read_temp(client, srv);
+        ROS_INFO("Temperature in Fahrenheit: %.2f\n", temperature);
+        res.data = temperature;
+        res.success = true;
+        return true;
+    } else {
+        ROS_ERROR("Failed to read temperature.");
+        return false;
+    }
 }
 
 
@@ -79,15 +95,11 @@ int main(int argc, char **argv) {
 
     // Initialize temp sensor node
     ros::init(argc, argv, "mcp9808");
-    ros::NodeHandle n;
-    ros::ServiceClient client = n.serviceClient<hbs2::i2c_bus>("i2c_srv");
-    hbs2::i2c_bus srv;
-    ROS_INFO("ROS Node [mcp9808] has started.");
-    if (write_init(client, srv)) {
-        while(1) {
-            usleep(1000000);
-    	    float temperature = read_temp(client, srv);
-	    ROS_INFO("Temperature in Fahrenheit: %.2f\n", temperature);
-}       }
+    n = ros::NodeHandlePtr(new ros::NodeHandle);
+
+    ros::ServiceServer temp_srv = n->advertiseService("temp_srv", report_temp);
+    ROS_INFO("ROS temperature service has started.");
+    ros::spin();
+
     return 0;	
 }
