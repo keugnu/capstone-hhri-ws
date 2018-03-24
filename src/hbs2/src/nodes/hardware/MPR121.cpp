@@ -1,14 +1,13 @@
 /*      MPR121 Touch Sensor Hardware Node       */
 
+// System
 #include <stdio.h>
 #include <unistd.h>
 #include <stdint.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
 #include <vector>
 #include <iostream>
 
+// ROS
 #include "ros/ros.h"
 #include "hbs2/i2c_bus.h"
 #include "std_msgs/UInt8.h"
@@ -145,8 +144,10 @@ uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         currentlyTouched |= readTouch[1] << 8;
         currentlyTouched &= 0x0FFF;
         
+        ROS_WARN("currentlyTouched: %x", currentlyTouched);
+
         for(int i = 0; i < 12; i++) {
-            if ((currentlyTouched & (1 << i)) && !(wasTouched & (1 << i))) {
+            if ((currentlyTouched & (1 << i)) && !(wasTouched & (1 << i)) && (i != 4)) {
                 ROS_INFO("Pin %i was touched.\n", i);
                 return i; 
             }

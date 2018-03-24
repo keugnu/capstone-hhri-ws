@@ -137,6 +137,9 @@ add_executable(mpr121 src/nodes/hardware/MPR121.cpp)
 add_executable(iort src/nodes/behavior/bvr_iort.cpp)
 add_executable(iot_srv src/nodes/service/iot_srv.cpp)
 add_executable(touch src/nodes/behavior/touch.cpp)
+add_executable(tts_srv src/nodes/service/tts_srv.cpp)
+add_executable(vl53l0x src/nodes/hardware/IR_1.cpp)
+add_executable(track src/nodes/behavior/track.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,6 +156,8 @@ add_executable(touch src/nodes/behavior/touch.cpp)
 #add_dependencies(iort ${catkin_EXPORTED_TARGETS})
 add_dependencies(mpr121 hbs2_generate_messages_cpp)
 add_dependencies(touch hbs2_generate_messages_cpp)
+add_dependencies(vl53l0x hbs2_generate_messages_cpp)
+add_dependencies(track hbs2_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -166,6 +171,9 @@ target_link_libraries(mpr121 ${catkin_LIBRARIES})
 target_link_libraries(iort ${catkin_LIBRARIES} curl curlpp)
 target_link_libraries(iot_srv ${catkin_LIBRARIES})
 target_link_libraries(touch ${catkin_LIBRARIES})
+target_link_libraries(tts_srv ${catkin_LIBRARIES})
+target_link_libraries(vl53l0x ${catkin_LIBRARIES})
+target_link_libraries(track ${catkin_LIBRARIES})
 
 
 #############

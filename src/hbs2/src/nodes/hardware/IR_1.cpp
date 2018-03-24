@@ -1006,22 +1006,26 @@ int main(int argc, char **argv) {
     
     VL53L0X ir_sensor_1;
     VL53L0X ir_sensor_2(0x30);
-    VL53L0X ir_sensor_3(0x31);
+    //VL53L0X ir_sensor_3(0x31);
 
+//    ir_sensor_1.setAddress(client, srv, 0x30);    
+    ir_sensor_2.setAddress(client, srv, 0x31);    
+    sleep(1);
+/*
     ir_sensor_1.init(client, srv, 0);
     ir_sensor_1.setTimeout(500);
     ir_sensor_1.startContinuous(client, srv);
-
-//    ir_sensor_2.setAddress(client, srv, 0x30);    
+  */  
     ir_sensor_2.init(client, srv, 0);
     ir_sensor_2.setTimeout(500);
     ir_sensor_2.startContinuous(client, srv);
 
-//    ir_sensor_3.setAddress(client, srv, 0x31);
+/*
+    ir_sensor_3.setAddress(client, srv, 0x31);
     ir_sensor_3.init(client, srv, 0);
     ir_sensor_3.setTimeout(500);
     ir_sensor_3.startContinuous(client, srv);
-
+*/
     // Create publisher:
     ros::Publisher ir_pub = n.advertise<std_msgs::UInt16MultiArray>("tpc_track", 10);
     ros::Rate loop_rate(1);
@@ -1031,9 +1035,9 @@ int main(int argc, char **argv) {
         std_msgs::UInt16MultiArray msg;
         // Clear array
         msg.data.clear();
-        msg.data.push_back(ir_sensor_1.readRangeContinuousMillimeters(client, srv));
+        //msg.data.push_back(ir_sensor_1.readRangeContinuousMillimeters(client, srv));
         msg.data.push_back(ir_sensor_2.readRangeContinuousMillimeters(client, srv));
-        msg.data.push_back(ir_sensor_3.readRangeContinuousMillimeters(client, srv));
+//        msg.data.push_back(ir_sensor_3.readRangeContinuousMillimeters(client, srv));
 /*       ROS_WARN("IR sensor 1 distance: %umm", ir_sensor_1.readRangeContinuousMillimeters(client, srv));
        ROS_WARN("IR sensor 2 distance: %umm", ir_sensor_2.readRangeContinuousMillimeters(client, srv));
        ROS_WARN("IR sensor 3 distance: %umm", ir_sensor_3.readRangeContinuousMillimeters(client, srv));
