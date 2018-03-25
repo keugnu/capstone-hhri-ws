@@ -89,7 +89,7 @@ void begin(ros::NodeHandle &n) {
     std::string get_cmd_uri = "http://127.0.0.1/api/getcommand";
     std::string get_tts_uri = "http://127.0.0.1/api/gettts";
     std::string set_resp_uri = "http://127.0.0.1/api/setdata?data=";
-    static int last_command = 0;
+    // static int last_command = 0;
     m_pBuffer = NULL;
     m_Size = 0;
     resp.content = "";
@@ -101,9 +101,9 @@ void begin(ros::NodeHandle &n) {
 
     rest_req(resp, get_cmd_uri);
 
-    if (resp.code == 200 && last_command != m_pBuffer[0]) {
-        ROS_INFO("A new command has been made.");
-        last_command = m_pBuffer[0];
+    // if (resp.code == 200 && last_command != m_pBuffer[0]) {
+        // ROS_INFO("A new command has been made.");
+        // last_command = m_pBuffer[0];
 
         switch (m_pBuffer[0]) {
             case 1: {
@@ -155,8 +155,11 @@ void begin(ros::NodeHandle &n) {
                 else { ROS_ERROR("Request to iot_srv to shake head has failed."); }
                 break;
 	    }
-	}
-    }
+        default:
+            ROS_INFO("[ROS IOT] No action taken.");
+            break;
+	    }
+    // }
 }
 
 
