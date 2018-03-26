@@ -21,7 +21,7 @@ void touchCallback(const std_msgs::UInt8::ConstPtr& msg) {
     ros::ServiceClient tts_client = n->serviceClient<hbs2::tts>("tts_srv");
     hbs2::tts srv_tts;
 
-    if (msg->data == 1) {
+    if (msg->data == 1 || msg->data == 3) {
         srv_tts.request.text = "Thank you";
         tts_client.call(srv_tts);
     }
