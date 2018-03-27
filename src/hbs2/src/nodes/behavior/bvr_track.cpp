@@ -10,6 +10,9 @@
 #include "hbs2/servo.h"
 
 
+const int _SERVO_SPEED_ = 50;
+const int _SERVO_POS_CHANGE_ = 20;
+
 ros::NodeHandlePtr n = NULL;
 int last_position = 90;
 
@@ -31,11 +34,11 @@ void track_callback(const std_msgs::UInt16MultiArray::ConstPtr& msg) {
             ROS_INFO("Object is right of center.");
             if (last_position < 140) {
                 srv_servo.request.command = 2;
-                srv_servo.request.speed = 10;
+                srv_servo.request.speed = _SERVO_SPEED_;
                 servo_client.call(srv_servo);
                 srv_servo.request.command = 1;
-                srv_servo.request.position = last_position + 10;
-                last_position += 10;
+                srv_servo.request.position = last_position + _SERVO_POS_CHANGE_;
+                last_position += _SERVO_POS_CHANGE_;
                 servo_client.call(srv_servo);
             }
             break;
@@ -48,13 +51,13 @@ void track_callback(const std_msgs::UInt16MultiArray::ConstPtr& msg) {
                 diff = 90 - last_position;
                 if (diff > 0) {
                     srv_servo.request.command = 1;
-                    srv_servo.request.position = last_position + 10;
-                    last_position += 10;
+                    srv_servo.request.position = last_position + _SERVO_POS_CHANGE_;
+                    last_position += _SERVO_POS_CHANGE_;
                 }
                 else {
                     srv_servo.request.command = 1;
-                    srv_servo.request.position = last_position - 10;
-                    last_position -= 10;
+                    srv_servo.request.position = last_position - _SERVO_POS_CHANGE_;
+                    last_position -= _SERVO_POS_CHANGE_;
                 }
                 servo_client.call(srv_servo);
             }
@@ -64,11 +67,11 @@ void track_callback(const std_msgs::UInt16MultiArray::ConstPtr& msg) {
             ROS_INFO("Object is left of center.");
             if (last_position > 40) {
                 srv_servo.request.command = 2;
-                srv_servo.request.speed = 10;
+                srv_servo.request.speed = _SERVO_SPEED_;
                 servo_client.call(srv_servo);            
                 srv_servo.request.command = 1;
-                srv_servo.request.position = last_position - 10;
-                last_position -= 10;
+                srv_servo.request.position = last_position - _SERVO_POS_CHANGE_;
+                last_position -= _SERVO_POS_CHANGE_;
                 servo_client.call(srv_servo); 
             }
             break;
