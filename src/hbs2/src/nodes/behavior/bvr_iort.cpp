@@ -89,7 +89,6 @@ void begin(ros::NodeHandle &n) {
     std::string get_cmd_uri = "http://127.0.0.1/api/getcommand";
     std::string get_tts_uri = "http://127.0.0.1/api/gettts";
     std::string set_resp_uri = "http://127.0.0.1/api/setdata?data=";
-    static int last_command = 0;
     m_pBuffer = NULL;
     m_Size = 0;
     resp.content = "";
@@ -101,32 +100,28 @@ void begin(ros::NodeHandle &n) {
 
     rest_req(resp, get_cmd_uri);
 
-    if (resp.code == 200 && last_command != m_pBuffer[0]) {
-        ROS_INFO("A new command has been made.");
-        last_command = m_pBuffer[0];
+    switch (m_pBuffer[0]) {
+        case 1: {
+        ROS_INFO("A request to read the sonar sensor has been made.");
+            /*  send request to iot_srv
+                req.request.command = 1
 
-        switch (m_pBuffer[0]) {
-            case 1: {
-	        ROS_INFO("A request to read the sonar sensor has been made.");
-                /*  send request to iot_srv
-                    req.request.command = 1
-
-                    check for success and return data back to api client
-                    if res.response.success == true
-                        create rest_req(resp, set_resp_uri)
-                */
-                srv_iot.request.command = 1;
-                iot_client.call(srv_iot);
-                if (srv_iot.response.success == true) {
-                    ROS_INFO("Sending sonar data to remote.");
-                    rest_req(resp, set_resp_uri + std::to_string(srv_iot.response.data));
-                }
-                else { ROS_ERROR("Request to iot_srv for reading sonar failed."); }
-                break;
-	    }
-	    case 2: {
-	        ROS_INFO("A request for tts has been made.");
-	        rest_req(resp, get_tts_uri);
+                check for success and return data back to api client
+                if res.response.success == true
+                    create rest_req(resp, set_resp_uri)
+            */
+            srv_iot.request.command = 1;
+            iot_client.call(srv_iot);
+            if (srv_iot.response.success == true) {
+                ROS_INFO("Sending sonar data to remote.");
+                rest_req(resp, set_resp_uri + std::to_string(srv_iot.response.data));
+            }
+            else { ROS_ERROR("Request to iot_srv for reading sonar failed."); }
+            break;
+        }
+        case 2: {
+            ROS_INFO("A request for tts has been made.");
+            rest_req(resp, get_tts_uri);
                 /*  send request to iot_srv
                     req.request.command = 2
                     req.request.text = resp.content
@@ -140,9 +135,9 @@ void begin(ros::NodeHandle &n) {
                 if (srv_iot.response.success ==  true) { ROS_INFO("Request for TTS completed."); }
                 else { ROS_ERROR("Request to iot_srv for TTS has failed."); }
                 break;
-	    }
-	    case 3: {
-	        ROS_INFO("A request to shake the robot's head has been made.");
+        }
+        case 3: {
+            ROS_INFO("A request to shake the robot's head has been made.");
                 /*  send request to iot_srv
                     req.request.command = 3
                 
@@ -154,8 +149,10 @@ void begin(ros::NodeHandle &n) {
                 if (srv_iot.response.success ==  true) { ROS_INFO("Request to shake head completed."); }
                 else { ROS_ERROR("Request to iot_srv to shake head has failed."); }
                 break;
-	    }
-	}
+        }
+        default:
+            ROS_INFO("[ROS IOT] No action taken.");
+            break;
     }
 }
 
