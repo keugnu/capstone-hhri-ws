@@ -1,13 +1,13 @@
 <launch>
-    <node pkg="hbs2" name="i2c_mgr" type="i2c_mgr" required="true"/>
+    <node pkg="hbs2" name="i2c_mgr" type="i2c_mgr" required="true" />
     <node pkg="hbs2" name="iot_srv" type="iot_srv" />
     <node pkg="hbs2" name="iort" type="iort" />
-    <node pkg="hbs2" name="mcp9808" type="mcp9808" />
+    <!-- node pkg="hbs2" name="mcp9808" type="mcp9808" /-->
     <node pkg="hbs2" name="mpr121" type="mpr121" />
     <node pkg="hbs2" name="srf02" type="srf02" />
     <node pkg="hbs2" name="touch" type="touch" />
-    <node pkg="hbs2" name="track" type"track">
-    <node pkg="hbs2" name="tts_srv" type"tts_srv">
-    <node pkg="hbs2" name="maestro" type"maestro">
-    <node pkg="hbs2" name="vl53l0x" type"vl53l0x">
+    <node pkg="hbs2" name="track" type="track" />
+    <node pkg="hbs2" name="tts_srv" type="tts_srv" />
+    <node pkg="hbs2" name="maestro" type="maestro" />
+    <node pkg="hbs2" name="vl53l0x" type="vl53l0x" />
 </launch>
