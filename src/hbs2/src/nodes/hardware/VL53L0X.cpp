@@ -1026,7 +1026,7 @@ int main(int argc, char **argv) {
 
     // Create publisher:
     ros::Publisher ir_pub = n.advertise<std_msgs::UInt16MultiArray>("tpc_track", 10);
-    ros::Rate loop_rate(1);
+    ros::Rate loop_rate(5);
 
     while(ros::ok) {
         // Store data in message object and then publish
