@@ -58,7 +58,7 @@ add_service_files(FILES
     iot.srv
     sonar.srv
     tts.srv
-    servo.srv
+    maestro.srv
     temp.srv
 )
 
@@ -131,17 +131,17 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${CURLPP_INCLUDE_DIRS})
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/hbs2_node.cpp)
 
-add_executable(hbs2_i2c_mgr src/nodes/service/i2c_mgr.cpp)
+add_executable(i2c_mgr src/nodes/service/i2c_mgr.cpp)
 add_executable(mcp9808 src/nodes/hardware/MCP9808.cpp)
 add_executable(srf02 src/nodes/hardware/SRF02.cpp)
 add_executable(mpr121 src/nodes/hardware/MPR121.cpp)
 add_executable(iort src/nodes/behavior/bvr_iort.cpp)
 add_executable(iot_srv src/nodes/service/iot_srv.cpp)
-add_executable(touch src/nodes/behavior/touch.cpp)
+add_executable(touch src/nodes/behavior/bvr_touch.cpp)
 add_executable(tts_srv src/nodes/service/tts_srv.cpp)
-add_executable(vl53l0x src/nodes/hardware/IR_1.cpp)
-add_executable(track src/nodes/behavior/track.cpp)
-add_executable(servo src/nodes/hardware/servo.cpp)
+add_executable(vl53l0x src/nodes/hardware/VL53L0X.cpp)
+add_executable(track src/nodes/behavior/bvr_track.cpp)
+add_executable(maestro src/nodes/hardware/maestro.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,21 +153,21 @@ add_executable(servo src/nodes/hardware/servo.cpp)
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-#add_dependencies(hbs2_i2c_mgr ${catkin_EXPORTED_TARGETS})
+#add_dependencies(i2c_mgr ${catkin_EXPORTED_TARGETS})
 #add_dependencies(mcp9808 ${catkin_EXPORTED_TARGETS})
 #add_dependencies(iort ${catkin_EXPORTED_TARGETS})
 add_dependencies(mpr121 hbs2_generate_messages_cpp)
 add_dependencies(touch hbs2_generate_messages_cpp)
 add_dependencies(vl53l0x hbs2_generate_messages_cpp)
 add_dependencies(track hbs2_generate_messages_cpp)
-add_dependencies(servo hbs2_generate_messages_cpp)
+add_dependencies(maestro hbs2_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
 
-target_link_libraries(hbs2_i2c_mgr ${catkin_LIBRARIES})
+target_link_libraries(i2c_mgr ${catkin_LIBRARIES})
 target_link_libraries(mcp9808 ${catkin_LIBRARIES})
 target_link_libraries(srf02 ${catkin_LIBRARIES})
 target_link_libraries(mpr121 ${catkin_LIBRARIES})
@@ -177,7 +177,7 @@ target_link_libraries(touch ${catkin_LIBRARIES})
 target_link_libraries(tts_srv ${catkin_LIBRARIES})
 target_link_libraries(vl53l0x ${catkin_LIBRARIES})
 target_link_libraries(track ${catkin_LIBRARIES})
-target_link_libraries(servo ${catkin_LIBRARIES})
+target_link_libraries(maestro ${catkin_LIBRARIES})
 
 
 #############
