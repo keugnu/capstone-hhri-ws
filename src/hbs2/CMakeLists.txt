@@ -58,7 +58,7 @@ add_service_files(FILES
     iot.srv
     sonar.srv
     tts.srv
-    maestro.srv
+    servo.srv
     temp.srv
 )
 
