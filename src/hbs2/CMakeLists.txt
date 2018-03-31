@@ -142,6 +142,8 @@ add_executable(tts_srv src/nodes/service/tts_srv.cpp)
 add_executable(vl53l0x src/nodes/hardware/VL53L0X.cpp)
 add_executable(track src/nodes/behavior/bvr_track.cpp)
 add_executable(maestro src/nodes/hardware/maestro.cpp)
+add_executable(pca9685 src/nodes/hardware/PCA9685.cpp)
+add_executable(zx_sensor src/nodes/hardware/ZX_Sensor.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -161,6 +163,8 @@ add_dependencies(touch hbs2_generate_messages_cpp)
 add_dependencies(vl53l0x hbs2_generate_messages_cpp)
 add_dependencies(track hbs2_generate_messages_cpp)
 add_dependencies(maestro hbs2_generate_messages_cpp)
+add_dependencies(pca9685 hbs2_generate_messages_cpp)
+add_dependencies(zx_sensor hbs2_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -178,6 +182,8 @@ target_link_libraries(tts_srv ${catkin_LIBRARIES})
 target_link_libraries(vl53l0x ${catkin_LIBRARIES})
 target_link_libraries(track ${catkin_LIBRARIES})
 target_link_libraries(maestro ${catkin_LIBRARIES})
+target_link_libraries(pca9685 ${catkin_LIBRARIES})
+target_link_libraries(zx_sensor ${catkin_LIBRARIES})
 
 
 #############
