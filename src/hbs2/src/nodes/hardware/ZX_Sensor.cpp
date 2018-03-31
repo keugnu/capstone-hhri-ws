@@ -8,6 +8,9 @@
 // Custom
 #include "ZX_Sensor.h"
 
+// ROS
+#include "std_msgs/UInt8.h"
+
 /**
  * Constructor - Instantiates ZX_Sensor object
  */
@@ -457,9 +460,15 @@ int main(int argc, char **argv) {
     ros::ServiceClient client = n.serviceClient<hbs2::i2c_bus>("i2c_srv");
     hbs2::i2c_bus srv;
 
+    // Create publisher:
+    ros::Publisher gesture_pub = n.advertise<std_msgs::UInt8>("tpc_wave", 5);
+
+    // Running at 10Hz:
+    ros::Rate loop_rate(10);    
+
     ZX_Sensor zx_sensor = ZX_Sensor(0x10);
-    uint8_t x_pos[10];
-    uint8_t z_pos[10];
+    uint8_t x_pos[3];
+    uint8_t z_pos[3];
 
     // Initialize ZX Sensor (configure I2C and read model ID)
     if ( zx_sensor.init(client, srv) ) {
@@ -468,9 +477,12 @@ int main(int argc, char **argv) {
         printf("Something went wrong during ZX Sensor init!");
     }
 
-	while(1) {
+	while(ros::ok()) {
+        // Message to be published to wave topic:
+        std_msgs::UInt8 msg;
+
 		// Store 10 position readings
-		for (int i = 0; i < 5; ) {
+		for (int i = 0; i < 3; ) {
 			if ( zx_sensor.positionAvailable(client, srv) ) {
 				x_pos[i] = zx_sensor.readX(client, srv);
 				z_pos[i] = zx_sensor.readZ(client, srv);
@@ -479,16 +491,20 @@ int main(int argc, char **argv) {
 		}
 
 		int i = 0;
-		for (i = 0; i < 5; i++) {
+		for (i = 0; i < 3; i++) {
 			if (z_pos[i] > 20)
 				break;
 		}
-		if (i == 5) {
-			printf("Wave");
-			printf("\n");
+		if (i == 3) {
+			ROS_INFO("Wave");
+            msg.data = 1;
 			sleep(1);			
-		}
+		} else { msg.data = 0; }
 
+        // Broadcast message to subscriber
+        gesture_pub.publish(msg);
+        ros::spinOnce();
+        loop_rate.sleep();
 	}
 	return 1;
 }
