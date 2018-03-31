@@ -19,13 +19,13 @@ PCA9685::PCA9685(uint8_t addr) {
     _i2caddr = addr;
 }
 
-void PCA9685::begin(ros::ServiceClient &client, hbs2::i2c_bus &srv, void) {
+void PCA9685::begin(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     reset(client, srv);
 
     setPWMFreq(client, srv, 1000);
 }
 
-void PCA9685::reset(ros::ServiceClient &client, hbs2::i2c_bus &srv, void) {
+void PCA9685::reset(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     write8(client, srv, PCA9685_MODE1, 0x80);
 
     usleep(10);
@@ -64,6 +64,18 @@ void PCA9685::setPWMFreq(ros::ServiceClient &client, hbs2::i2c_bus &srv, float f
 #endif
 }
 
+
+bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address) {
+    srv.request.request.resize(4);
+    srv.request.size = 4;
+    srv.request.request = {0x00, address, 0x00, 0x00};
+    usleep(1000);
+    client.call(srv);
+    if (!srv.response.success) return false;
+    else return true;
+}
+
+
 void PCA9685::setPWM(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t num, uint16_t on, uint16_t off) {
 #ifdef ENABLE_DEBUG_OUTPUT
     printf("Setting PWM %d: %d -> %d", num, on, off);
@@ -96,16 +108,6 @@ void PCA9685::setPin(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t num
             setPWM(client, srv, num, 0, val);
         }
     }
-}
-
-bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address) {
-    srv.request.request.resize(4);
-    srv.request.size = 4;
-    srv.request.request = {0x00, address, 0x00, 0x00};
-    usleep(1000);
-    client.call(srv);
-    if (!srv.response.success) return false;
-    else return true;
 }
 
 
