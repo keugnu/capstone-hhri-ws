@@ -20,7 +20,7 @@ static char const* iic_dev = "/dev/i2c-1";
 std::queue<Request> work_queue, completed_queue;
 
 bool write_req(Request* job) {
-    ROS_INFO("A write request has been made for device %X", job->get_id());
+    ROS_DEBUG("A write request has been made for device %X", job->get_id());
     if ((fd = open(iic_dev, O_RDWR)) < 0) { 
         ROS_ERROR("Cannot open I2C bus."); 
         return false;
@@ -62,7 +62,7 @@ bool write_req(Request* job) {
 }
 
 bool read_req(Request* job) {
-    ROS_INFO("A read request has been made for device %X", job->get_id());
+    ROS_DEBUG("A read request has been made for device %X", job->get_id());
     if ((fd = open(iic_dev, O_RDWR)) < 0) {
         ROS_ERROR("Failed to open I2C bus.");
         close(fd);
@@ -86,18 +86,18 @@ bool read_req(Request* job) {
         /* read data from requested registers. */
         if (read(fd, read_reg, job->data.size()) != job->data.size()) {
             job->num_attempts++;
-            ROS_ERROR("Failed to read from I2C bus. The bus manager will try twice more.");
+            ROS_WARN("Failed to read from I2C bus. The bus manager will try twice more.");
             for (int i = 0; i < 2; i++) {
                 job->num_attempts++;
                 usleep(70000);
                 if (read(fd, read_reg, job->data.size()) != job->data.size())
-                    ROS_ERROR("Failed to read from the I2C bus. Trying again.");
+                    ROS_WARN("Failed to read from the I2C bus. Trying again.");
                 else {
                     close(fd);
                     return true;
                 }
             }
-            ROS_WARN("Failed to read from the I2C bus three times. Returning unsuccessful status.");
+            ROS_ERROR("Failed to read from the I2C bus three times. Returning unsuccessful status.");
             close(fd);
             return false; 
         }
@@ -117,7 +117,7 @@ bool handle_req(hbs2::i2c_bus::Request &req, hbs2::i2c_bus::Response &res) {
     
     /* check to see if the request is for status and serve it first if so. */
     if (request.get_type() == "status") {
-        ROS_INFO("A request has been made for the status of device %X", req.request[1]);
+        ROS_DEBUG("A request has been made for the status of device %X", req.request[1]);
         res.success = false;
         /* find the job that the request for status is for. it should be in the completed queue. */
         for (int i = 0; i < completed_queue.size(); i++) {

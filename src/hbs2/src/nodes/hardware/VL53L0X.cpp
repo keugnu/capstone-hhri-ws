@@ -1023,6 +1023,7 @@ int main(int argc, char **argv) {
     ir_sensor_left.setTimeout(500);
     ir_sensor_left.startContinuous(client, srv);
 
+    ROS_INFO("VL53L0X initialized.");
     // Create publisher:
     ros::Publisher ir_pub = n.advertise<std_msgs::UInt16MultiArray>("tpc_track", 10);
     ros::Rate loop_rate(5);

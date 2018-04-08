@@ -37,7 +37,7 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 	return true;    
     }
 
-    ROS_ERROR("Failed to call service i2c_srv");
+    ROS_ERROR("Failed to call service i2c_srv.");
     return false;
 }
 
@@ -74,7 +74,7 @@ bool report_range(hbs2::sonar::Request &req, hbs2::sonar::Response &res) {
     uint16_t range = read_range(i2c_client, srv_i2c);
     res.data = range;
     res.success = true;
-    ROS_INFO("Range in centimeters: %u", range);
+    ROS_DEBUG("Range in centimeters: %u", range);
     return true;
 }
 
@@ -85,17 +85,8 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "srf02");
     n = ros::NodeHandlePtr(new ros::NodeHandle);
 
-    ROS_INFO("The sonar sensor is being initialized.");
     ros::ServiceClient client = n->serviceClient<hbs2::i2c_bus>("i2c_srv");
-    hbs2::i2c_bus srv_i2c;
-
-    /*
-    while(true) {
-        uint16_t range = read_range(client, srv_i2c);
-        ROS_WARN("Range in cm: %u", range);
-    }
-    */
-    
+    hbs2::i2c_bus srv_i2c;    
 
     ros::ServiceServer srv = n->advertiseService("sonar_srv", report_range);
     ROS_INFO("ROS sonar service has started.");
