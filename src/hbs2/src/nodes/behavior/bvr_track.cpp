@@ -1,13 +1,11 @@
 // System
-#include <stdio.h>
 #include <unistd.h>
 #include <vector>
-#include <iostream>
 
 // ROS
 #include "ros/ros.h"
-#include "std_msgs/UInt16MultiArray.h"
 #include "hbs2/servo.h"
+#include "std_msgs/UInt16MultiArray.h"
 
 
 const int _SERVO_SPEED_ = 50;

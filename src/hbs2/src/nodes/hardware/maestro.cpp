@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
-#include <stdio.h>
-#include <iostream>
 
 // ROS
 #include "ros/ros.h"

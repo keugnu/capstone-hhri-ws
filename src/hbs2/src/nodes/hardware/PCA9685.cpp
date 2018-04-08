@@ -10,7 +10,6 @@
 // System
 #include <unistd.h>
 #include <math.h>
-#include <stdio.h>
 
 // Custom
 #include "PCA9685.h"

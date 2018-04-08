@@ -1,11 +1,9 @@
 /*      MPR121 Touch Sensor Hardware Node       */
 
 // System
-#include <stdio.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <vector>
-#include <iostream>
 
 // ROS
 #include "ros/ros.h"

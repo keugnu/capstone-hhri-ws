@@ -86,9 +86,9 @@ void rest_req(Response &resp, std::string uri) {
 void begin(ros::NodeHandle &n) {
     m_pBuffer = (char*) malloc(MAX_FILE_LENGTH * sizeof(char));
     Response resp;
-    std::string get_cmd_uri = "http://127.0.0.1/api/getcommand";
-    std::string get_tts_uri = "http://127.0.0.1/api/gettts";
-    std::string set_resp_uri = "http://127.0.0.1/api/setdata?data=";
+    std::string get_cmd_uri = "http://54.187.205.93/api/getcommand";
+    std::string get_tts_uri = "http://54.187.205.93/api/gettts";
+    std::string set_resp_uri = "http://54.187.205.93/api/setdata?data=";
     m_pBuffer = NULL;
     m_Size = 0;
     resp.content = "";

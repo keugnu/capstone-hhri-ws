@@ -1,7 +1,6 @@
 /*  Gesture sensor hardware node    */
 
 // System
-#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 

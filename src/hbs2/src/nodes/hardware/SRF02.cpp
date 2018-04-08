@@ -1,11 +1,9 @@
 /*	SRF02 sonar client node that calls upon i2c_mgr.cpp	*/
 
 // System
-#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <vector>
-#include <iostream>
 
 // ROS
 #include "ros/ros.h"

@@ -1,10 +1,7 @@
 /*      Wave gesture behavior node, subscriber to ZX_Sensor hardware node publisher       */
 // System
-#include <stdio.h>
 #include <unistd.h>
 #include <vector>
-#include <iostream>
-
 
 // ROS
 #include "ros/ros.h"
