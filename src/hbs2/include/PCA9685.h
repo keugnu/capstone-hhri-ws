@@ -34,7 +34,7 @@ class PCA9685
         void begin(ros::ServiceClient &client, hbs2::i2c_bus &srv);
         void reset(ros::ServiceClient &client, hbs2::i2c_bus &srv);
         void setPWMFreq(ros::ServiceClient &client, hbs2::i2c_bus &srv, float freq);
-        void setPWM(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t num, uint16_t on, uint16_t off);
+        void setPWM(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t, uint8_t, uint16_t);
         void setPin(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t num, uint16_t val, bool invert=false);
     
     private:

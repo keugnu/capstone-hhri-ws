@@ -60,6 +60,7 @@ add_service_files(FILES
     tts.srv
     servo.srv
     temp.srv
+    led.srv
 )
 
 ## Generate actions in the 'action' folder
