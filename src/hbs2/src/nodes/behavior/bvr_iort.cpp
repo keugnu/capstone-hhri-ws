@@ -1,6 +1,3 @@
-// LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-// g++ -g --std=c++11 -Werror -I/usr/include bvr_iort.cpp -L/usr/local/lib -lcurlpp -lcurl -o bvr_iort
-
 // System
 #include <unistd.h>
 #include <cstdlib>
@@ -26,13 +23,20 @@
 char *m_pBuffer = NULL;
 size_t m_Size = 0;
 
-
+/*  Class: Response
+    desc: A class to store contents of an HTTP respone
+    attrs:
+        code: HTTP response code
+        size: Size of the response body in bytes
+        content: HTTP response body content
+*/
 class Response {
     public:
         long code;
         int size;
         std::string content;
 };
+
 
 void* Realloc(void* ptr, size_t size)
 {
@@ -63,7 +67,14 @@ size_t WriteMemoryCallback(char* ptr, size_t size, size_t nmemb)
   return realsize;
 };
 
-
+/*  Function: rest_req (REST Request)
+    desc:   A funciton that performs an HTTP request with libcurl + curlpp
+    inputs:
+        &resp: HTTP response object
+        uri: Uniform Resource Locator for the API call
+    outputs:
+        &resp: HTTP response object
+*/
 void rest_req(Response &resp, std::string uri) {
     curlpp::Cleanup cleaner;
     curlpp::Easy request;
@@ -82,7 +93,14 @@ void rest_req(Response &resp, std::string uri) {
     else { resp.content = ++m_pBuffer; m_pBuffer--; }
 }
 
-
+/*  Function: begin
+    desc:   A function that is called from main in a loop at 2Hz rate that will perform and REST request 
+            and controls the flow of the Node.
+    inputs:
+        &n: ROS NodeHandle for this Node
+    outputs:
+        &n: ROS NodeHandle for this Node
+*/
 void begin(ros::NodeHandle &n) {
     m_pBuffer = (char*) malloc(MAX_FILE_LENGTH * sizeof(char));
     Response resp;
@@ -156,7 +174,14 @@ void begin(ros::NodeHandle &n) {
     }
 }
 
-
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "iort");
     ros::NodeHandle n;
@@ -165,7 +190,7 @@ int main(int argc, char *argv[]) {
     while(ros::ok()) {
         begin(n);
         ros::spinOnce();
-	loop_rate.sleep();
+	    loop_rate.sleep();
     }
     return 0;
 }

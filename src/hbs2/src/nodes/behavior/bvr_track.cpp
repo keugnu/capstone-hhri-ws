@@ -14,6 +14,13 @@ const int _SERVO_POS_CHANGE_ = 20;
 ros::NodeHandlePtr n = NULL;
 int last_position = 90;
 
+/*  Function: track_callback
+    desc:   Callback function for the IR sensor topic. Sends requests to the maestro service to move servos.
+    inputs:
+        &msg:   Array containing the current message on the IR sensor topic.
+    outputs:
+        None
+*/
 void track_callback(const std_msgs::UInt16MultiArray::ConstPtr& msg) {
     ros::ServiceClient servo_client = n->serviceClient<hbs2::servo>("servo_srv");
     hbs2::servo srv_servo;
@@ -80,7 +87,14 @@ void track_callback(const std_msgs::UInt16MultiArray::ConstPtr& msg) {
 
 }
 
-
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
     ros::init(argc, argv, "track");
     n = ros::NodeHandlePtr(new ros::NodeHandle);
