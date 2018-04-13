@@ -12,7 +12,7 @@ ros::NodeHandlePtr n = NULL;
 void adc_callback(const std_msgs::Int16MultiArray::ConstPtr& msg) {
     // Call tts service with text ("I love you") if hug occurs
 
-    if ((msg->data.at(3) * 0.0001875) > 2.0 && (msg->data.at(2) * 0.0001875) > 2.0) {
+    if ((msg->data.at(3) * 0.0001875) < 2.8 && (msg->data.at(2) * 0.0001875) < 2.8) {
         ros::ServiceClient tts_client = n->serviceClient<hbs2::tts>("tts_srv");
         hbs2::tts srv_tts;
         ROS_INFO("A hug has occurred.");
