@@ -74,10 +74,10 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address)
 }
 
 
-void PCA9685::setPWM(ros::ServiceClient &client, hbs2::i2c_bus &srv,/* old: uint8_t num, uint16_t on, uint16_t off */ uint8_t rgb_sel, uint8_t driver_sel, uint16_t saturation) {
-    srv.request.request.resize(6);
-    srv.request.size = 6;
-    srv.request.request = {0x02, _i2caddr,/* old: (LED0_ON_L + 4*num), on, (on>>8), off, (off>>8) */ rgb_sel, driver_sel, saturation << 8, saturation >> 8};
+void PCA9685::setPWM(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t num, uint16_t on, uint16_t off) {
+    srv.request.request.resize(7);
+    srv.request.size = 7;
+    srv.request.request = {0x02, _i2caddr, (uint8_t)(LED0_ON_L + 4*num), (uint8_t)on, (uint8_t)(on>>8), (uint8_t)off, (uint8_t)(off>>8)};
 
     if (client.call(srv)) {
         while (!status_req(client, srv, _i2caddr));
@@ -147,9 +147,59 @@ bool handle_req(hbs2::led::Request &req, hbs2::led::Response &res) {
        
 	pwm = PCA9685(addr);
 
+    pwm._RedPin      = 0;
+    pwm._GreenPin    = 1;
+    pwm._BluePin     = 2;
+
 	pwm.begin(client, srv);
 	pwm.setPWMFreq(client, srv, 1600);
-    pwm.setPWM(client, srv, req.driver_dev, req.rgb_sel, req.saturation);
+
+    pwm.setPin(client, srv, pwm._GreenPin, 0, 0);
+    pwm.setPin(client, srv, pwm._BluePin, 0, 0);
+    pwm.setPin(client, srv, pwm._RedPin, 0, 0);
+
+    switch(req.color)
+    {    
+        // red
+        case 1:
+            pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
+            pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
+            pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
+            break;
+        case 2:
+            pwm.setPWM(client, srv, pwm._RedPin, 0, 0);
+            pwm.setPWM(client, srv, pwm._BluePin, 0, 2048);
+            pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
+            break;
+        case 3:
+            pwm.setPWM(client, srv, pwm._RedPin, 0, 0);
+            pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
+            pwm.setPWM(client, srv, pwm._GreenPin, 0, 2048);
+            break;
+        case 4:
+            pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
+            pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
+            pwm.setPWM(client, srv, pwm._GreenPin, 0, 1000);
+            break;
+        case 5:
+            pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
+            pwm.setPWM(client, srv, pwm._BluePin, 0, 2048);
+            pwm.setPWM(client, srv, pwm._GreenPin, 0, 2048);
+            break;
+        case 6:
+            pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
+            pwm.setPWM(client, srv, pwm._BluePin, 0, 2048);
+            pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
+            break;
+        default:
+            pwm.setPWM(client, srv, pwm._RedPin, 0, 0);
+            pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
+            pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
+            break;
+    }
+
+    res.success = true;
+
 }
 
 
