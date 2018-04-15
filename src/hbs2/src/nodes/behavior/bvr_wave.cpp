@@ -10,11 +10,14 @@
 
 ros::NodeHandlePtr n = NULL;
 
-// If a wave gesture has occurred, the humanoid will say hello
-void waveCallback(const std_msgs::UInt8::ConstPtr& msg) {
-    ROS_INFO("Wave!");
-    
-    // Call tts service with text ("Hello")
+/*  Function: wave_callback
+    desc: If a wave gesture has occurred, the humanoid will say hello
+    inputs:
+        &msg: contains the current data on the tpc_wave queue
+    outputs:
+        tts_client.call: sends a service request to the TTS service
+*/
+void wave_callback(const std_msgs::UInt8::ConstPtr& msg) {
     ros::ServiceClient tts_client = n->serviceClient<hbs2::tts>("tts_srv");
     hbs2::tts srv_tts;
 
@@ -24,10 +27,18 @@ void waveCallback(const std_msgs::UInt8::ConstPtr& msg) {
     }
 }
 
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
     ros::init(argc, argv, "wave");
     n = ros::NodeHandlePtr(new ros::NodeHandle);
-    ros::Subscriber sub = n->subscribe("tpc_wave", 5, waveCallback);
+    ros::Subscriber sub = n->subscribe("tpc_wave", 5, wave_callback);
 
     ros::spin();
 

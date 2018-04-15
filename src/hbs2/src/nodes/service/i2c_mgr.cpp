@@ -1,6 +1,5 @@
 // System
 #include <sys/types.h>
-#include <string>
 #include <queue>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -18,6 +17,7 @@
 static int fd;
 static char const* iic_dev = "/dev/i2c-1";
 std::queue<Request> work_queue, completed_queue;
+
 
 bool write_req(Request* job) {
     ROS_DEBUG("A write request has been made for device %X", job->get_id());
@@ -60,6 +60,7 @@ bool write_req(Request* job) {
         }
     }
 }
+
 
 bool read_req(Request* job) {
     ROS_DEBUG("A read request has been made for device %X", job->get_id());
@@ -111,6 +112,7 @@ bool read_req(Request* job) {
         }
     }
 }
+
 
 bool handle_req(hbs2::i2c_bus::Request &req, hbs2::i2c_bus::Response &res) {
     Request request = Request(req.request, req.size);
@@ -185,6 +187,14 @@ bool handle_req(hbs2::i2c_bus::Request &req, hbs2::i2c_bus::Response &res) {
     return true;
 }
 
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
     ros::init(argc, argv, "i2c_bus_mgr_srv");
     ros::NodeHandle n;

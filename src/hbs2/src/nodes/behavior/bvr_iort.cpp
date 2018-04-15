@@ -99,7 +99,9 @@ void rest_req(Response &resp, std::string uri) {
     inputs:
         &n: ROS NodeHandle for this Node
     outputs:
-        &n: ROS NodeHandle for this Node
+        iot_client.call: sends a request to the iot service for actions and/or data collection
+        iot_srv.response.data: response to client with data from sensor
+        iot_srv.response.success: boolean for successful request
 */
 void begin(ros::NodeHandle &n) {
     m_pBuffer = (char*) malloc(MAX_FILE_LENGTH * sizeof(char));
@@ -130,7 +132,7 @@ void begin(ros::NodeHandle &n) {
             */
             srv_iot.request.command = 1;
             iot_client.call(srv_iot);
-            if (srv_iot.response.success == true) {
+            if (srv_iot.response.success) {
                 ROS_INFO("Sending sonar data to remote.");
                 rest_req(resp, set_resp_uri + std::to_string(srv_iot.response.data));
             }
@@ -150,7 +152,7 @@ void begin(ros::NodeHandle &n) {
                 srv_iot.request.command = 2;
                 srv_iot.request.text = resp.content;
                 iot_client.call(srv_iot);
-                if (srv_iot.response.success ==  true) { ROS_INFO("Request for TTS completed."); }
+                if (srv_iot.response.success) { ROS_INFO("Request for TTS completed."); }
                 else { ROS_ERROR("Request to iot_srv for TTS has failed."); }
                 break;
         }
@@ -164,7 +166,7 @@ void begin(ros::NodeHandle &n) {
                 */
                 srv_iot.request.command = 3;
                 iot_client.call(srv_iot);
-                if (srv_iot.response.success ==  true) { ROS_INFO("Request to shake head completed."); }
+                if (srv_iot.response.success) { ROS_INFO("Request to shake head completed."); }
                 else { ROS_ERROR("Request to iot_srv to shake head has failed."); }
                 break;
         }
@@ -185,7 +187,7 @@ void begin(ros::NodeHandle &n) {
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "iort");
     ros::NodeHandle n;
-    ros::Rate loop_rate(0.5);
+    ros::Rate loop_rate(2);
     
     while(ros::ok()) {
         begin(n);

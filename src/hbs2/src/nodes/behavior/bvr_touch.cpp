@@ -13,8 +13,14 @@
 
 ros::NodeHandlePtr n = NULL;
 
-// If a touch has occurred at the correct pin, the humanoid will say thank you
-void touchCallback(const std_msgs::UInt8::ConstPtr& msg) {
+/*  Function: touch_callback
+    desc: If a touch has occurred at the correct pin, the humanoid will say thank you
+    inputs:
+        &msg: contains the current data on the tpc_touch queue
+    outputs:
+        tts_client.call: Sends a request to the TTS service
+*/
+void touch_callback(const std_msgs::UInt8::ConstPtr& msg) {
     ROS_INFO("Touch occurred at pin %u", msg->data);
     
     // Call tts service with text ("Thank you")
@@ -25,14 +31,20 @@ void touchCallback(const std_msgs::UInt8::ConstPtr& msg) {
         srv_tts.request.text = "Thank you";
         tts_client.call(srv_tts);
     }
-
-    
 }
 
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
     ros::init(argc, argv, "touch");
     n = ros::NodeHandlePtr(new ros::NodeHandle);
-    ros::Subscriber sub = n->subscribe("tpc_touch", 5, touchCallback);
+    ros::Subscriber sub = n->subscribe("tpc_touch", 5, touch_callback);
 
     ros::spin();
 

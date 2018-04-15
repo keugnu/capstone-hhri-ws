@@ -7,8 +7,18 @@
 #include "hbs2/tts.h"
 #include "std_msgs/Int16MultiArray.h"
 
+// declare a global NodeHandler
 ros::NodeHandlePtr n = NULL;
 
+
+/*  Function adc_callback
+    desc:   Callback function called when new data exists on tpc_adc. If a hug is detected then sends a request
+            to the TTS service
+    inputs:
+        &msg: current data in the tpc_adc queue
+    outputs:
+        tts_client.call: sends a request to the tts service
+*/
 void adc_callback(const std_msgs::Int16MultiArray::ConstPtr& msg) {
     // Call tts service with text ("I love you") if hug occurs
 
@@ -21,10 +31,16 @@ void adc_callback(const std_msgs::Int16MultiArray::ConstPtr& msg) {
         // Block 2 seconds before sensing a hug again
         usleep(2000000);
     }
-
 }
 
-
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
     ros::init(argc, argv, "hug");
     n = ros::NodeHandlePtr(new ros::NodeHandle);

@@ -11,10 +11,23 @@
 #include "hbs2/tts.h"
 #include "hbs2/servo.h"
 
-
+// Declare a global NodeHandle
 ros::NodeHandlePtr n = NULL;
 
-
+/*  Function: handle_req (handle request)
+    desc: Callback function for the IoT service. A proxy service for the IoRT behavior node.
+    inputs:
+        &req: req.command: identifies which service to call on behalf of the IoRT node
+            command:
+                |   1: call sonar service   |
+                |   2: call tts service     |
+                |   3: call servo service   |
+    outputs:
+        &res: res.success: boolean to report success of service call
+        sonar_client.call: sends a request to the sonar service to obtain a measurement
+        tts_client.call: sends a request to the tts service
+        servo_client.call: sends a request to the servo service to shake the robot's head
+*/
 bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
     ROS_INFO("Serving request from [iort] node.");
     
@@ -57,13 +70,14 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
             ROS_INFO("Serving request to shake head.");
             srv_servo.request.command = 2;
             srv_servo.request.speed = 100;
-            if(servo_client.call(srv_servo)) {
-                ROS_INFO("Servo speed has changed to 100 RPM.");
-            }
+            if (servo_client.call(srv_servo)) { ROS_DEBUG("Servo speed has changed to 100 RPM.") }
             else {
-                ROS_ERROR("Request to change speed of the servo has failed.");
+                ROS_ERROR("Request to change speed of the servo has failed in iot_srv.");
+                res.success = false;
+                return false;
             }
 
+            // For even iterations, turn head left, else turn right
             for(int i = 1; i < 5; i++) {
                 srv_servo.request.command = 1;
                 if (i % 2)
@@ -71,13 +85,17 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
                 else
                     srv_servo.request.position = 120;
                 servo_client.call(srv_servo);
-                usleep(200000);
+                // wait some time for the previous movement to complete
+                usleep(400000);
             }
 
             srv_servo.request.position = 90;
             servo_client.call(srv_servo);
 
-            if (srv_servo.response.success == true) { res.success = true; }
+            if (srv_servo.response.success == true) { 
+                ROS_INFO("Request to shake head has succeeded.");
+                res.success = true;
+            }
             else {
                 ROS_ERROR("Request to shake head has failed in iot_srv.");
                 res.success = false;
@@ -89,7 +107,14 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
     return true;
 }
 
-
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
     ros::init(argc, argv, "iot_srv");
     n = ros::NodeHandlePtr(new ros::NodeHandle);
