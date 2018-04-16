@@ -21,7 +21,7 @@ ros::NodeHandlePtr n = NULL;
     outputs:
         tts_client.call: Sends a request to the TTS service
 */
-bool touch_callback(const std_msgs::UInt8::ConstPtr& msg) {
+void touch_callback(const std_msgs::UInt8::ConstPtr& msg) {
     ROS_DEBUG("Touch occurred at pin %u", msg->data);
 
     ros::ServiceClient tts_client = n->serviceClient<hbs2::tts>("tts_srv");
@@ -31,7 +31,6 @@ bool touch_callback(const std_msgs::UInt8::ConstPtr& msg) {
         srv_tts.request.text = "Thank you";
         if(tts_client.call(srv_tts)) {
             ROS_INFO("TTS service call from touch behavior completed successfully.");
-            return true;
         }
         else { ROS_ERROR("TTS service call from touch behavior failed."); }
     }
