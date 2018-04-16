@@ -42,29 +42,27 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
     switch (req.command) {
         case 1: {
             ROS_INFO("Serving request to read sonar sensor.");
-            sonar_client.call(srv_sonar);
-            if (srv_sonar.response.success == true) {
-                res.success = true;
+            if (sonar_client.call(srv_sonar) {
                 res.data = srv_sonar.response.data;
+                ROS_INFO("Sonar measurement service request call from the IoT service has completed successfully.");
+                return true;
             }
             else {
                 ROS_ERROR("Request to read sonar sensor failed in iot_srv.");
-                res.success = false;
                 return false;
             }
-            break;
         }
         case 2: {
             ROS_INFO("Serving request for TTS.");
             srv_tts.request.text = req.text;
-            tts_client.call(srv_tts);
-            if (srv_tts.response.success) { res.success = true; }
+            if (tts_client.call(srv_tts)) {
+                ROS_INFO("TTS service call from the IoT service has completed successfully.");
+                return true;
+            }
             else {
                 ROS_ERROR("TTS Request failed in iot_srv.");
-                res.success = false;
                 return false;
             }
-            break;
         }
         case 3: {
             ROS_INFO("Serving request to shake head.");
@@ -73,7 +71,6 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
             if (servo_client.call(srv_servo)) { ROS_DEBUG("Servo speed has changed to 100 RPM.") }
             else {
                 ROS_ERROR("Request to change speed of the servo has failed in iot_srv.");
-                res.success = false;
                 return false;
             }
 
@@ -90,21 +87,18 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
             }
 
             srv_servo.request.position = 90;
-            servo_client.call(srv_servo);
-
-            if (srv_servo.response.success == true) { 
+            if(servo_client.call(srv_servo)) {
                 ROS_INFO("Request to shake head has succeeded.");
-                res.success = true;
+                return true;
             }
             else {
                 ROS_ERROR("Request to shake head has failed in iot_srv.");
-                res.success = false;
                 return false;
             }
-            break;
         }
+        default:
+            break;
     }
-    return true;
 }
 
 /*  Function: main

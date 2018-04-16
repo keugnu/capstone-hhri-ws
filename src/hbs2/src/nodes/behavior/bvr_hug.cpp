@@ -20,14 +20,13 @@ ros::NodeHandlePtr n = NULL;
         tts_client.call: sends a request to the tts service
 */
 void adc_callback(const std_msgs::Int16MultiArray::ConstPtr& msg) {
-    // Call tts service with text ("I love you") if hug occurs
-
     if ((msg->data.at(3) * 0.0001875) < 2.8 && (msg->data.at(2) * 0.0001875) < 2.8) {
         ros::ServiceClient tts_client = n->serviceClient<hbs2::tts>("tts_srv");
         hbs2::tts srv_tts;
         ROS_INFO("A hug has occurred.");
         srv_tts.request.text = "I love you";
-        tts_client.call(srv_tts);
+        if (tts_client.call(srv_tts)) { ROS_INFO("TTS service call from hug behavior completed successfully."); }
+        else { ROS_ERROR("TTS service call from hug behavior failed."); }
         // Block 2 seconds before sensing a hug again
         usleep(2000000);
     }

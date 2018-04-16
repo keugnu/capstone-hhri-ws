@@ -122,7 +122,7 @@ void begin(ros::NodeHandle &n) {
 
     switch (m_pBuffer[0]) {
         case 1: {
-        ROS_INFO("A request to read the sonar sensor has been made.");
+            ROS_DEBUG("A request to read the sonar sensor has been made.");
             /*  send request to iot_srv
                 req.request.command = 1
 
@@ -131,47 +131,44 @@ void begin(ros::NodeHandle &n) {
                     create rest_req(resp, set_resp_uri)
             */
             srv_iot.request.command = 1;
-            iot_client.call(srv_iot);
-            if (srv_iot.response.success) {
-                ROS_INFO("Sending sonar data to remote.");
+            if (iot_client.call(srv_iot)) {
+                ROS_INFO("Sending sonar data to remote IoT client.");
                 rest_req(resp, set_resp_uri + std::to_string(srv_iot.response.data));
             }
             else { ROS_ERROR("Request to iot_srv for reading sonar failed."); }
             break;
         }
         case 2: {
-            ROS_INFO("A request for tts has been made.");
+            ROS_DEBUG("A request for TTS has been made.");
             rest_req(resp, get_tts_uri);
-                /*  send request to iot_srv
-                    req.request.command = 2
-                    req.request.text = resp.content
+            /*  send request to iot_srv
+                req.request.command = 2
+                req.request.text = resp.content
 
-                    check for success
-                    res.resonse.success == true
-                */
-                srv_iot.request.command = 2;
-                srv_iot.request.text = resp.content;
-                iot_client.call(srv_iot);
-                if (srv_iot.response.success) { ROS_INFO("Request for TTS completed."); }
-                else { ROS_ERROR("Request to iot_srv for TTS has failed."); }
-                break;
+                check for success
+                res.resonse.success == true
+            */
+            srv_iot.request.command = 2;
+            srv_iot.request.text = resp.content;
+            if (iot_client.call(srv_iot)) { ROS_INFO("Request for TTS completed."); }
+            else { ROS_ERROR("Request to iot_srv for TTS has failed."); }
+            break;
         }
         case 3: {
-            ROS_INFO("A request to shake the robot's head has been made.");
-                /*  send request to iot_srv
-                    req.request.command = 3
-                
-                    check for success
-                    if res.response.success == true
-                */
-                srv_iot.request.command = 3;
-                iot_client.call(srv_iot);
-                if (srv_iot.response.success) { ROS_INFO("Request to shake head completed."); }
-                else { ROS_ERROR("Request to iot_srv to shake head has failed."); }
-                break;
+            ROS_DEBUG("A request to shake the robot's head has been made.");
+            /*  send request to iot_srv
+                req.request.command = 3
+            
+                check for success
+                if res.response.success == true
+            */
+            srv_iot.request.command = 3;
+            if (iot_client.call(srv_iot)) { ROS_INFO("Request to shake head completed."); }
+            else { ROS_ERROR("Request to iot_srv to shake head has failed."); }
+            break;
         }
         default:
-            ROS_INFO("[ROS IOT] No action taken.");
+            ROS_INFO("[ROS IoT] No action taken.");
             break;
     }
 }
