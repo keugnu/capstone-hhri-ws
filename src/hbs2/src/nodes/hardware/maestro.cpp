@@ -25,10 +25,8 @@ const std::string _MAESTRO_SPDCTRL_ = "/home/nvidia/hbs2_1/src/hbs2/lib/maestro_
 	outputs:
 		int:	spatial position for the maestro to turn a servo
 */
-int convert_from_deg(int deg)
-{
-	int pos = 36*deg + 1060;
-	return pos;
+int convert_from_deg(int deg) {
+	return 36*deg + 1060;
 }
 
 /*	Function: change_speed
@@ -38,14 +36,13 @@ int convert_from_deg(int deg)
 	outputs:
 		bool: true if successful else false
 */
-bool change_speed(int spd)
-{
-	ROS_INFO("Changing speed to %i RPM.", spd);
+bool change_speed(int spd) {
+	ROS_INFO("Changing servo speed to %i RPM.", spd);
 	std::stringstream ss;
 	ss << _MAESTRO_SPDCTRL_ << " " << _MAESTRO_DEV_ << " " << _MAESTRO_CHANNEL_ << " " << std::to_string(spd);
 	std::string syscomspd = ss.str();
-	if (system((syscomspd).c_str()) != 0) return false;
-	else return true;
+	if (!system((syscomspd).c_str())) { return false; }
+	else { return true; }
 }
 
 /*	Function: move
@@ -55,15 +52,14 @@ bool change_speed(int spd)
 	outputs:
 		bool: true if successful else false
 */
-bool move(int pos)
-{
-	ROS_INFO("Changing head position to %i degrees.", pos);
+bool move(int pos) {
+	ROS_INFO("Changing servo position to %i degrees.", pos);
 	pos = convert_from_deg(pos);
 	std::stringstream ss;
 	ss <<  _MAESTRO_POSCTRL_ << " " << _MAESTRO_DEV_ << " " << _MAESTRO_CHANNEL_ << " " << std::to_string(pos);
 	std::string syscompos = ss.str();
-	if (system((syscompos).c_str()) != 0) return false;
-	else return true;
+	if (!system((syscompos).c_str())) { return false; }
+	else { return true; }
 }
 
 /*	Function: handle_req (handle request)
@@ -75,34 +71,23 @@ bool move(int pos)
 	outputs:
 		&res:	service response content object
 */
-bool handle_req(hbs2::servo::Request &req, hbs2::servo::Response &res)
-{
+bool handle_req(hbs2::servo::Request &req, hbs2::servo::Response &res) {
 	switch (req.command) {
 		case 1: {
-			ROS_INFO("A request to move the position of the head has been made.");
-			if(move(req.position)) {
-				res.success = true;
-				return true;
-			}
+			ROS_DEBUG("A request to move the position of the head has been made.");
+			if(move(req.position)) { return true; }
 			else {
-				ROS_ERROR("The position request has failed.");
-				res.success = false;
+				ROS_ERROR("The servo request to change position has failed.");
 				return false;
 			}
-			break;
 		}
 		case 2: {
-			ROS_INFO("A request to change the speed of head movement has been made.");
-			if(change_speed(req.speed)) {
-				res.success = true;
-				return true;
-			}
+			ROS_DEBUG("A request to change the speed of head movement has been made.");
+			if(change_speed(req.speed)) { return true; }
 			else {
-				ROS_ERROR("The servo request has failed.");
-				res.success = false;
+				ROS_ERROR("The servo request to change speed has failed.");
 				return false;
 			}
-			break;
 		}
 		default:
 			break;
@@ -120,7 +105,7 @@ bool init_pos() {
 	std::stringstream ss;
 	ss << _MAESTRO_POSCTRL_ << " " << _MAESTRO_DEV_ << " " << _MAESTRO_CHANNEL_ << " " << std::to_string(4500);
 	std::string syscompos = ss.str();
-	if(system(syscompos.c_str()) != 0) {
+	if(!system(syscompos.c_str())) {
 		ROS_ERROR("Servo initialization to 90 degrees failed.");
 		return false;
 	}
@@ -145,8 +130,11 @@ int main(int argc, char** argv) {
 	ros::ServiceServer srv = n.advertiseService("servo_srv", handle_req);
 	ROS_INFO("ROS servo service has started.");
 	
-	if(init_pos()) ros::spin();
-	else exit(1);
+	if (init_pos()) { ros::spin() }
+	else { 
+		ROS_CRIT("Failed to initialize servo. Exiting...");
+		exit(1);
+	}
 	
 	return 0;
 }

@@ -17,7 +17,7 @@
 // ROS
 #include "hbs2/led.h"
 
-
+// declare global NodeHandle
 ros::NodeHandlePtr n = NULL;
 
 
@@ -28,20 +28,17 @@ PCA9685::PCA9685(uint8_t addr) {
 
 void PCA9685::begin(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     reset(client, srv);
-
     setPWMFreq(client, srv, 1000);
 }
 
 
 void PCA9685::reset(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     write8(client, srv, PCA9685_MODE1, 0x80);
-
     usleep(10);
 }
 
 
 void PCA9685::setPWMFreq(ros::ServiceClient &client, hbs2::i2c_bus &srv, float freq) {
-
     freq *= 0.9;
     float prescaleval = 25000000;
     prescaleval /= 4096;
@@ -58,8 +55,7 @@ void PCA9685::setPWMFreq(ros::ServiceClient &client, hbs2::i2c_bus &srv, float f
 
     usleep(5);
 
-    write8(client, srv, PCA9685_MODE1, oldmode | 0xa0);   //This sets the MODE1 register to 
-                                                          //turn on auto increment;
+    write8(client, srv, PCA9685_MODE1, oldmode | 0xa0);   /*This sets the MODE1 register to turn on auto increment; */
 }
 
 
@@ -68,9 +64,8 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address)
     srv.request.size = 4;
     srv.request.request = {0x00, address, 0x00, 0x00};
     usleep(1000);
-    client.call(srv);
-    if (!srv.response.success) return false;
-    else return true;
+    if (client.call(srv)) { return false; }
+    else { return true; }
 }
 
 
@@ -80,31 +75,21 @@ void PCA9685::setPWM(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t num
     srv.request.request = {0x02, _i2caddr, (uint8_t)(LED0_ON_L + 4*num), (uint8_t)on, (uint8_t)(on>>8), (uint8_t)off, (uint8_t)(off>>8)};
 
     if (client.call(srv)) {
+        /* wait for job to be served in the i2c manager. */
         while (!status_req(client, srv, _i2caddr));
     }
-    else {
-        ROS_ERROR("Unable to write to set PWM for LED Driver"); // exit(1);
-    }
+    else { ROS_ERROR("Unable to write to set PWM for LED Driver"); }
 }
 
 
 void PCA9685::setPin(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t num, uint16_t val, bool invert) {    
-    if(val > (uint16_t)4095) {
-        val = (uint16_t)4095;
-    }
-
-    if (invert) {
-        setPWM(client, srv, num, 4096, 0);
-    } else if (val == 4095) {
-        setPWM(client, srv, num, 0, 4096);
-    } else {
-        if (val == 4096) {
-            setPWM(client, srv, num, 4096, 0);
-        } else if(val == 0) {
-            setPWM(client, srv, num, 0, 4096);
-        } else {
-            setPWM(client, srv, num, 0, val);
-        }
+    if(val > (uint16_t)4095) { val = (uint16_t)4095; }
+    if (invert) { setPWM(client, srv, num, 4096, 0); }
+    else if (val == 4095) { setPWM(client, srv, num, 0, 4096); }
+    else {
+        if (val == 4096) { setPWM(client, srv, num, 4096, 0); }
+        else if (val == 0) { setPWM(client, srv, num, 0, 4096); }
+        else { setPWM(client, srv, num, 0, val); }
     }
 }
 
@@ -115,12 +100,11 @@ uint8_t PCA9685::read8(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t a
     srv.request.request = {0x01, _i2caddr, addr};
 
     if (client.call(srv)) {
+        /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv, _i2caddr));
         return (uint8_t)srv.response.data.at(0);
     } 
-    else {
-        ROS_ERROR("Unable to read from LED Driver"); // exit(1); 
-    }
+    else { ROS_ERROR("Unable to read from LED Driver"); }
 }
 
 
@@ -130,11 +114,10 @@ void PCA9685::write8(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t add
     srv.request.request = {0x02, _i2caddr, addr, d};
 
     if (client.call(srv)) {
+        /* wait for job to be served in the i2c manager. */
         while (!status_req(client, srv, _i2caddr));
     } 
-    else {
-        ROS_ERROR("Unable to write for LED Driver"); // exit(1);
-    }
+    else { ROS_ERROR("Unable to write for LED Driver"); }
 }
 
 
@@ -158,50 +141,51 @@ bool handle_req(hbs2::led::Request &req, hbs2::led::Response &res) {
     pwm.setPin(client, srv, pwm._BluePin, 0, 0);
     pwm.setPin(client, srv, pwm._RedPin, 0, 0);
 
-    switch(req.color)
-    {    
+    switch(req.color) {    
         // red
         case 1:
             pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
             pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
             pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
             break;
+        // blue
         case 2:
             pwm.setPWM(client, srv, pwm._RedPin, 0, 0);
             pwm.setPWM(client, srv, pwm._BluePin, 0, 2048);
             pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
             break;
+        // green
         case 3:
             pwm.setPWM(client, srv, pwm._RedPin, 0, 0);
             pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
             pwm.setPWM(client, srv, pwm._GreenPin, 0, 2048);
             break;
+        // yellow
         case 4:
             pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
             pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
             pwm.setPWM(client, srv, pwm._GreenPin, 0, 1000);
             break;
+        // white
         case 5:
             pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
             pwm.setPWM(client, srv, pwm._BluePin, 0, 2048);
             pwm.setPWM(client, srv, pwm._GreenPin, 0, 2048);
             break;
+        // pink
         case 6:
             pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
             pwm.setPWM(client, srv, pwm._BluePin, 0, 2048);
             pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
             break;
+        // off
         default:
             pwm.setPWM(client, srv, pwm._RedPin, 0, 0);
             pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
             pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
             break;
     }
-
-    res.success = true;
-
 }
-
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "pca9685");

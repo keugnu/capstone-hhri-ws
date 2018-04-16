@@ -13,18 +13,14 @@
 /**
  * Constructor - Instantiates ZX_Sensor object
  */
-ZX_Sensor::ZX_Sensor(int address)
-{
+ZX_Sensor::ZX_Sensor(int address) {
     addr_ = address;
 }
 
 /**
  * Destructor
  */
-ZX_Sensor::~ZX_Sensor()
-{
-
-}
+ZX_Sensor::~ZX_Sensor() {}
 
 /**
  * Configures I2C communications and checks ZX sensor model number.
@@ -35,17 +31,12 @@ ZX_Sensor::~ZX_Sensor()
 bool ZX_Sensor::init(ros::ServiceClient &client, hbs2::i2c_bus &srv, InterruptType interrupts /* = NO_INTERRUPTS */, bool active_high /* = true */) {
     
     /* Initialize I2C */
-    //Wire.begin();
     
     /* Enable DR interrupts based on desired interrupts */
     setInterruptTrigger(client, srv, interrupts);
     configureInterrupts(client, srv, active_high, false);
-    if ( interrupts == NO_INTERRUPTS ) {
-        disableInterrupts(client, srv);
-    } else {
-        enableInterrupts(client, srv);
-    }
-    
+    if (interrupts == NO_INTERRUPTS) { disableInterrupts(client, srv); }
+    else { enableInterrupts(client, srv); }
     return true;
 }
 
@@ -56,11 +47,7 @@ bool ZX_Sensor::init(ros::ServiceClient &client, hbs2::i2c_bus &srv, InterruptTy
  */
 uint8_t ZX_Sensor::getModelVersion(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     uint8_t ver;
-    
-    if ( !wireReadDataByte(client, srv, ZX_MODEL, ver) ) {
-        return ZX_ERROR;
-    }
-
+    if (!wireReadDataByte(client, srv, ZX_MODEL, ver)) { return ZX_ERROR; }
     return ver;
 }
 
@@ -71,11 +58,7 @@ uint8_t ZX_Sensor::getModelVersion(ros::ServiceClient &client, hbs2::i2c_bus &sr
  */
 uint8_t ZX_Sensor::getRegMapVersion(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     uint8_t ver;
-    
-    if ( !wireReadDataByte(client, srv, ZX_REGVER, ver) ) {
-        return ZX_ERROR;
-    }
-    
+    if (!wireReadDataByte(client, srv, ZX_REGVER, ver)) { return ZX_ERROR; }
     return ver;
 }
 
@@ -91,46 +74,22 @@ uint8_t ZX_Sensor::getRegMapVersion(ros::ServiceClient &client, hbs2::i2c_bus &s
   */
 bool ZX_Sensor::setInterruptTrigger(ros::ServiceClient &client, hbs2::i2c_bus &srv, InterruptType interrupts) {
     
-#if DEBUG
-    Serial.printf("Setting interrupts: "));
-    Serial.println(interrupts);
-#endif
-
     switch ( interrupts ) {
         case POSITION_INTERRUPTS:
-            if ( !setRegisterBit(client, srv, ZX_DRE, DRE_CRD) ) {
-                return false;
-            }
+            if (!setRegisterBit(client, srv, ZX_DRE, DRE_CRD)) { return false; }
             break;
         case GESTURE_INTERRUPTS:
-            if ( !setRegisterBit(client, srv, ZX_DRE, DRE_SWP) ) {
-                return false;
-            }
-            if ( !setRegisterBit(client, srv, ZX_DRE, DRE_HOVER) ) {
-                return false;
-            }
-            if ( !setRegisterBit(client, srv, ZX_DRE, DRE_HVG) ) {
-                return false;
-            }
+            if (!setRegisterBit(client, srv, ZX_DRE, DRE_SWP)) { return false; }
+            if (!setRegisterBit(client, srv, ZX_DRE, DRE_HOVER)) { return false; }
+            if (!setRegisterBit(client, srv, ZX_DRE, DRE_HVG)) { return false; }
             break;
         case ALL_INTERRUPTS:
-            if ( !wireWriteDataByte(client, srv, ZX_DRE, SET_ALL_DRE) ) {
-                return false;
-            }
+            if (!wireWriteDataByte(client, srv, ZX_DRE, SET_ALL_DRE)) { return false; }
             break;
         default:
-            if ( !wireWriteDataByte(client, srv, ZX_DRE, 0x00) ) {
-                return false;
-            }
+            if (!wireWriteDataByte(client, srv, ZX_DRE, 0x00)) { return false; }
             break;
     }
-    
-#if DEBUG
-    uint8_t val;
-    wireReadDataByte(client, srv, ZX_DRE, val);
-    Serial.print(F("ZX_DRE: b"));
-    Serial.println(val, BIN);
-#endif
     
     return true;
 }
@@ -145,33 +104,20 @@ bool ZX_Sensor::setInterruptTrigger(ros::ServiceClient &client, hbs2::i2c_bus &s
 bool ZX_Sensor::configureInterrupts(ros::ServiceClient &client, hbs2::i2c_bus &srv, bool active_high, bool pin_pulse /* = false */)
 {
     /* Set or clear polarity bit to make DR active-high or active-low */
-    if ( active_high ) {
-        if ( !setRegisterBit(client, srv, ZX_DRCFG, DRCFG_POLARITY) ) {
-            return false;
-        }
-    } else {
-        if ( !clearRegisterBit(client, srv, ZX_DRCFG, DRCFG_POLARITY) ) {
-            return false;
-        }
+    if (active_high) {
+        if (!setRegisterBit(client, srv, ZX_DRCFG, DRCFG_POLARITY)) { return false; }
+    }
+    else {
+        if (!clearRegisterBit(client, srv, ZX_DRCFG, DRCFG_POLARITY)) { return false; }
     }
     
     /* Set or clear edge bit to make DR pulse or remain set until STATUS read */
-    if ( pin_pulse ) {
-        if ( !setRegisterBit(client, srv, ZX_DRCFG, DRCFG_EDGE) ) {
-            return false;
-        }
-    } else {
-        if ( !clearRegisterBit(client, srv, ZX_DRCFG, DRCFG_EDGE) ) {
-            return false;
-        }
+    if (pin_pulse) {
+        if (!setRegisterBit(client, srv, ZX_DRCFG, DRCFG_EDGE)) { return false; }
     }
-    
-#if DEBUG
-    uint8_t val;
-    wireReadDataByte(client, srv, ZX_DRCFG, val);
-    Serial.print(F("ZX_DRCFG: b"));
-    Serial.println(val, BIN);
-#endif
+    else {
+        if (!clearRegisterBit(client, srv, ZX_DRCFG, DRCFG_EDGE)) { return false; }
+    }
     
     return true;
 }
@@ -182,10 +128,7 @@ bool ZX_Sensor::configureInterrupts(ros::ServiceClient &client, hbs2::i2c_bus &s
  * @return True if operation successful. False otherwise.
  */
 bool ZX_Sensor::enableInterrupts(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
-    if ( !setRegisterBit(client, srv, ZX_DRCFG, DRCFG_EN) ) {
-        return false;
-    }
-    
+    if (!setRegisterBit(client, srv, ZX_DRCFG, DRCFG_EN)) { return false; }
     return true;
 }
 
@@ -195,10 +138,7 @@ bool ZX_Sensor::enableInterrupts(ros::ServiceClient &client, hbs2::i2c_bus &srv)
  * @return True if operation successful. False otherwise.
  */
 bool ZX_Sensor::disableInterrupts(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
-    if ( !clearRegisterBit(client, srv, ZX_DRCFG, DRCFG_EN) ) {
-        return false;
-    }
-    
+    if (!clearRegisterBit(client, srv, ZX_DRCFG, DRCFG_EN)) { return false; }
     return true;
 }
 
@@ -210,9 +150,7 @@ bool ZX_Sensor::disableInterrupts(ros::ServiceClient &client, hbs2::i2c_bus &srv
 bool ZX_Sensor::clearInterrupt(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     uint8_t val;
     
-    if ( !wireReadDataByte(client, srv, ZX_STATUS, val) ) {
-        return false;
-    }
+    if (!wireReadDataByte(client, srv, ZX_STATUS, val)) { return false; }
     
     return true;
 }
@@ -230,13 +168,9 @@ bool ZX_Sensor::positionAvailable(ros::ServiceClient &client, hbs2::i2c_bus &srv
     uint8_t status;
     
     /* Read STATUS register and extract DAV bit */
-    if ( !wireReadDataByte(client, srv, ZX_STATUS, status) ) {
-        return false;
-    }
+    if (!wireReadDataByte(client, srv, ZX_STATUS, status)) { return false; }
     status &= 0b00000001;    
-    if ( status ) {
-        return true;
-    }
+    if (status) { return true; }
     
     return false;
 }
@@ -250,14 +184,10 @@ bool ZX_Sensor::gestureAvailable(ros::ServiceClient &client, hbs2::i2c_bus &srv)
     uint8_t status;
     
     /* Read STATUS register and extract SWP bit */
-    if ( !wireReadDataByte(client, srv, ZX_STATUS, status) ) {
-        return false;
-    }
+    if (!wireReadDataByte(client, srv, ZX_STATUS, status)) { return false; }
     
     status &= 0b00011100;    
-    if ( status ) {
-        return true;
-    }
+    if (status) { return true; }
     
     return false;
 }
@@ -275,12 +205,8 @@ uint8_t ZX_Sensor::readX(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     uint8_t x_pos;
     
     /* Read X Position register and return it */
-    if ( !wireReadDataByte(client, srv, ZX_XPOS, x_pos) ) {
-        return ZX_ERROR;
-    }
-    if ( x_pos > MAX_X ) {
-        return ZX_ERROR;
-    }
+    if (!wireReadDataByte(client, srv, ZX_XPOS, x_pos)) { return ZX_ERROR; }
+    if (x_pos > MAX_X) { return ZX_ERROR; }
     return x_pos;
 }
 
@@ -293,12 +219,8 @@ uint8_t ZX_Sensor::readZ(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     uint8_t z_pos;
     
     /* Read X Position register and return it */
-    if ( !wireReadDataByte(client, srv, ZX_ZPOS, z_pos) ) {
-        return ZX_ERROR;
-    }
-    if ( z_pos > MAX_Z ) {
-        return ZX_ERROR;
-    }
+    if (!wireReadDataByte(client, srv, ZX_ZPOS, z_pos)) { return ZX_ERROR; }
+    if (z_pos > MAX_Z) { return ZX_ERROR; }
     return z_pos;
 }
 
@@ -315,15 +237,8 @@ GestureType ZX_Sensor::readGesture(ros::ServiceClient &client, hbs2::i2c_bus &sr
     uint8_t gesture;
     
     /* Read GESTURE register and return the value */
-    if ( !wireReadDataByte(client, srv, ZX_GESTURE, gesture) ) {
-        printf("UNABLE TO READ GESTURE REG\n");
-        return NO_GESTURE;
-    }
-#if DEBUG
-    Serial.print(F("Gesture read: "));
-    Serial.println(gesture);
-#endif
-    printf("Gesture: %u\n", gesture);
+    if (!wireReadDataByte(client, srv, ZX_GESTURE, gesture)) { return NO_GESTURE; }
+
     switch ( gesture ) {
         case RIGHT_SWIPE:
             return RIGHT_SWIPE;
@@ -345,10 +260,7 @@ uint8_t ZX_Sensor::readGestureSpeed(ros::ServiceClient &client, hbs2::i2c_bus &s
     uint8_t speed;
     
     /* Read GESTURE register and return the value */
-    if ( !wireReadDataByte(client, srv, ZX_GSPEED, speed) ) {
-        return ZX_ERROR;
-    }
-    
+    if (!wireReadDataByte(client, srv, ZX_GSPEED, speed)) { return ZX_ERROR; }
     return speed;
 }
 
@@ -366,16 +278,12 @@ bool ZX_Sensor::setRegisterBit(ros::ServiceClient &client, hbs2::i2c_bus &srv, u
     uint8_t val;
     
     /* Read value from register */
-    if ( !wireReadDataByte(client, srv, reg, val) ) {
-        return false;
-    }
+    if (!wireReadDataByte(client, srv, reg, val)) { return false; }
     
     /* Set bits in register and write back to the register */
     val |= (1 << bit);
-    if ( !wireWriteDataByte(client, srv, reg, val) ) {
-        return false;
-    }
-    
+    if (!wireWriteDataByte(client, srv, reg, val)) { return false; }
+
     return true;    
 }
 
@@ -389,15 +297,11 @@ bool ZX_Sensor::clearRegisterBit(ros::ServiceClient &client, hbs2::i2c_bus &srv,
     uint8_t val;
     
     /* Read value from register */
-    if ( !wireReadDataByte(client, srv, reg, val) ) {
-        return false;
-    }
+    if (!wireReadDataByte(client, srv, reg, val)) { return false; }
     
     /* Clear bit in register and write back to the register */
     val &= ~(1 << bit);
-    if ( !wireWriteDataByte(client, srv, reg, val) ) {
-        return false;
-    }
+    if (!wireWriteDataByte(client, srv, reg, val)) { return false; }
     
     return true;    
 } 
@@ -429,9 +333,14 @@ bool ZX_Sensor::wireWriteDataByte(ros::ServiceClient &client, hbs2::i2c_bus &srv
     srv.request.request = {0x02, addr_, reg, val};
 
     if (client.call(srv)) {
+        /* wait for job to be served in the i2c manager. */
         while (!status_req(client, srv, addr_));
         return true;
-    } else { ROS_ERROR("Unable to write for gesture sensor"); return false; }    
+    } 
+    else {
+        ROS_ERROR("Unable to write to gesture sensor.");
+        return false;
+    }    
 }
 
 /**
@@ -450,7 +359,11 @@ bool ZX_Sensor::wireReadDataByte(ros::ServiceClient &client, hbs2::i2c_bus &srv,
         while(!status_req(client, srv, addr_));
         val = (uint8_t)srv.response.data.at(0);
         return true;
-    } else { ROS_ERROR("Unable to read from gesture sensor"); return false; }    
+    }
+    else {
+        ROS_ERROR("Unable to read from gesture sensor");
+        return false;
+    }    
 }
 
 int main(int argc, char **argv) {
@@ -470,11 +383,8 @@ int main(int argc, char **argv) {
     uint8_t z_pos[3];
 
     // Initialize ZX Sensor (configure I2C and read model ID)
-    if ( zx_sensor.init(client, srv) ) {
-        printf("ZX Sensor initialization complete");
-    } else {
-        printf("Something went wrong during ZX Sensor init!");
-    }
+    if ( zx_sensor.init(client, srv) ) { ROS_INFO("ZX sensor initialization complete."); }
+    else { ROS_ERROR("ZX sensor initialization failed."); }
 
 	while(ros::ok()) {
         // Message to be published to wave topic:

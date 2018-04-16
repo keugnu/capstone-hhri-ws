@@ -32,9 +32,7 @@ static void writeRegister(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_
   if (client.call(srv)) {
     while(!status_req(client, srv, i2cAddress));
   } 
-  else { 
-    ROS_ERROR("Write request to ADC failed."); // exit(1);
-  }
+  else { ROS_ERROR("Write request to ADC failed."); }
 }
 
 
@@ -51,9 +49,7 @@ static uint16_t readRegister(ros::ServiceClient &client, hbs2::i2c_bus &srv, uin
     value |= (uint16_t)srv.response.data.at(1);
     return value;
   } 
-  else { 
-    ROS_ERROR("Read request to the ADC failed."); // exit(1);
-  } 
+  else { ROS_ERROR("Read request to the ADC failed."); } 
 }
 
 

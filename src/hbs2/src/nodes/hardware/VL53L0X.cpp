@@ -41,8 +41,7 @@ void VL53L0X::setAddress(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t
 
 bool VL53L0X::init(ros::ServiceClient &client, hbs2::i2c_bus &srv, bool io_2v8) {
   // sensor uses 1V8 mode for I/O by default; switch to 2V8 mode if necessary
-  if (io_2v8)
-  {
+  if (io_2v8) {
     writeReg(client, srv, VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV,
       readReg(client, srv, VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV) | 0x01); // set bit 0
   }
@@ -93,16 +92,12 @@ bool VL53L0X::init(ros::ServiceClient &client, hbs2::i2c_bus &srv, bool io_2v8) 
 
   for (uint8_t i = 0; i < 48; i++)
   {
-    if (i < first_spad_to_enable || spads_enabled == spad_count)
-    {
+    if (i < first_spad_to_enable || spads_enabled == spad_count) {
       // This bit is lower than the first one that should be enabled, or
       // (reference_spad_count) bits have already been enabled, so zero this bit
       ref_spad_map[i / 8] &= ~(1 << (i % 8));
     }
-    else if ((ref_spad_map[i / 8] >> (i % 8)) & 0x1)
-    {
-      spads_enabled++;
-    }
+    else if ((ref_spad_map[i / 8] >> (i % 8)) & 0x1) { spads_enabled++; }
   }
 
   writeMulti(client, srv, GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
@@ -229,9 +224,8 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address)
     srv.request.size = 4;
     srv.request.request = {0x00, address, 0x00, 0x00};
     usleep(1000);
-    client.call(srv);
-    if (!srv.response.success) return false;
-	else return true;
+    if (client.call(srv)) { return false; }
+  	else { return true; }
 }
 
 // Write an 8-bit register
@@ -240,9 +234,11 @@ void VL53L0X::writeReg(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t r
   srv.request.request = {0x02, address, reg, value};
   srv.request.size = 4;
 
-  if (client.call(srv)) { 
-	while(!status_req(client, srv, address));
-  } else { ROS_ERROR("Unable to write for IR sensor"); exit(1); }
+  if (client.call(srv)) {
+    /* wait for job to be served in the i2c manager. */
+	  while(!status_req(client, srv, address));
+  }
+  else { ROS_ERROR("Unable to write for IR sensor"); }
 }
 
 // Write a 16-bit register
@@ -251,9 +247,11 @@ void VL53L0X::writeReg16Bit(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint
   srv.request.size = 5;
   srv.request.request = {0x02, address, reg, (uint8_t)((value >> 8) & 0xFF), (uint8_t)(value & 0xFF)};
 
-  if (client.call(srv)) { 
-	while(!status_req(client, srv, address));
-  } else { ROS_ERROR("Unable to write for IR sensor"); exit(1); }
+  if (client.call(srv)) {
+    /* wait for job to be served in the i2c manager. */
+	  while(!status_req(client, srv, address));
+  }
+  else { ROS_ERROR("Unable to write for IR sensor"); }
 }
 
 // Write a 32-bit register
@@ -263,9 +261,11 @@ void VL53L0X::writeReg32Bit(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint
   srv.request.request = {0x02, address, reg, (uint8_t)((value >> 24) & 0xFF), (uint8_t)((value >> 16) && 0xFF),
 			 (uint8_t)((value >> 8) & 0xFF), (uint8_t)(value & 0xFF) };
 
-  if (client.call(srv)) { 
-	while(!status_req(client, srv, address));
-  } else { ROS_ERROR("Unable to write for IR sensor"); exit(1); }
+  if (client.call(srv)) {
+    /* wait for job to be served in the i2c manager. */
+	  while(!status_req(client, srv, address));
+  }
+  else { ROS_ERROR("Unable to write for IR sensor"); }
 
 }
 
@@ -276,9 +276,11 @@ uint8_t VL53L0X::readReg(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t
   srv.request.request = {0x01, address, reg};
 
   if (client.call(srv)) {
+    /* wait for job to be served in the i2c manager. */
     while(!status_req(client, srv, address));
     return (uint8_t)srv.response.data.at(0);
-  } else { ROS_ERROR("Unable to read from IR sensor"); exit(1); }
+  }
+  else { ROS_ERROR("Unable to read from IR sensor"); }
 }
 
 // Read a 16-bit register
@@ -335,8 +337,9 @@ void VL53L0X::writeMulti(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t
     
 }
 
-// Read an arbitrary number of bytes from the sensor, starting at the given
-// register, into the given array
+/* Read an arbitrary number of bytes from the sensor, starting at the given
+register, into the given array
+*/
 void VL53L0X::readMulti(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t reg, uint8_t * dst, uint8_t count) {
   srv.request.request.resize(count+2);
   srv.request.size = (count+2);
@@ -351,14 +354,15 @@ void VL53L0X::readMulti(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t 
   } else { ROS_ERROR("Unable to read multi to IR sensor"); exit(1); }
 }
 
-// Set the return signal rate limit check value in units of MCPS (mega counts
-// per second). "This represents the amplitude of the signal reflected from the
-// target and detected by the device"; setting this limit presumably determines
-// the minimum measurement necessary for the sensor to report a valid reading.
-// Setting a lower limit increases the potential range of the sensor but also
-// seems to increase the likelihood of getting an inaccurate reading because of
-// unwanted reflections from objects other than the intended target.
-// Defaults to 0.25 MCPS as initialized by the ST API and this library.
+/* Set the return signal rate limit check value in units of MCPS (mega counts
+per second). "This represents the amplitude of the signal reflected from the
+target and detected by the device"; setting this limit presumably determines
+the minimum measurement necessary for the sensor to report a valid reading.
+Setting a lower limit increases the potential range of the sensor but also
+seems to increase the likelihood of getting an inaccurate reading because of
+unwanted reflections from objects other than the intended target.
+Defaults to 0.25 MCPS as initialized by the ST API and this library.
+*/
 bool VL53L0X::setSignalRateLimit(ros::ServiceClient &client, hbs2::i2c_bus &srv, float limit_Mcps)
 {
   if (limit_Mcps < 0 || limit_Mcps > 511.99) { return false; }
@@ -927,30 +931,25 @@ void VL53L0X::getSequenceStepTimeouts(ros::ServiceClient &client, hbs2::i2c_bus 
 // based on VL53L0X_decode_timeout()
 // Note: the original function returned a uint32_t, but the return value is
 // always stored in a uint16_t.
-uint16_t VL53L0X::decodeTimeout(uint16_t reg_val)
-{
+uint16_t VL53L0X::decodeTimeout(uint16_t reg_val) {
   // format: "(LSByte * 2^MSByte) + 1"
-  return (uint16_t)((reg_val & 0x00FF) <<
-         (uint16_t)((reg_val & 0xFF00) >> 8)) + 1;
+  return (uint16_t)((reg_val & 0x00FF) << (uint16_t)((reg_val & 0xFF00) >> 8)) + 1;
 }
 
 // Encode sequence step timeout register value from timeout in MCLKs
 // based on VL53L0X_encode_timeout()
 // Note: the original function took a uint16_t, but the argument passed to it
 // is always a uint16_t.
-uint16_t VL53L0X::encodeTimeout(uint16_t timeout_mclks)
-{
+uint16_t VL53L0X::encodeTimeout(uint16_t timeout_mclks) {
   // format: "(LSByte * 2^MSByte) + 1"
 
   uint32_t ls_byte = 0;
   uint16_t ms_byte = 0;
 
-  if (timeout_mclks > 0)
-  {
+  if (timeout_mclks > 0) {
     ls_byte = timeout_mclks - 1;
 
-    while ((ls_byte & 0xFFFFFF00) > 0)
-    {
+    while ((ls_byte & 0xFFFFFF00) > 0) {
       ls_byte >>= 1;
       ms_byte++;
     }
@@ -980,18 +979,15 @@ uint32_t VL53L0X::timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t
 
 
 // based on VL53L0X_perform_single_ref_calibration()
-bool VL53L0X::performSingleRefCalibration(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t vhv_init_byte)
-{
+bool VL53L0X::performSingleRefCalibration(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t vhv_init_byte) {
   writeReg(client, srv, SYSRANGE_START, 0x01 | vhv_init_byte); // VL53L0X_REG_SYSRANGE_MODE_START_STOP
 
   startTimeout();
-  while ((readReg(client, srv, RESULT_INTERRUPT_STATUS) & 0x07) == 0)
-  {
+  while ((readReg(client, srv, RESULT_INTERRUPT_STATUS) & 0x07) == 0) {
     if (checkTimeoutExpired()) { return false; }
   }
 
   writeReg(client, srv, SYSTEM_INTERRUPT_CLEAR, 0x01);
-
   writeReg(client, srv, SYSRANGE_START, 0x00);
 
   return true;
@@ -1023,7 +1019,7 @@ int main(int argc, char **argv) {
     ir_sensor_left.setTimeout(500);
     ir_sensor_left.startContinuous(client, srv);
 
-    ROS_INFO("VL53L0X initialized.");
+    ROS_INFO("VL53L0X node initialized.");
     // Create publisher:
     ros::Publisher ir_pub = n.advertise<std_msgs::UInt16MultiArray>("tpc_track", 10);
     ros::Rate loop_rate(5);
@@ -1036,16 +1032,10 @@ int main(int argc, char **argv) {
         
         // Reading center sensor distance (because default distance is 0 instead of 8190)
         uint16_t center_data = ir_sensor_center.readRangeContinuousMillimeters(client, srv);
-        if (center_data < 10)
-          msg.data.push_back(8190);
-        else
-          msg.data.push_back(center_data);
+        if (center_data < 10) { msg.data.push_back(8190); }
+        else { msg.data.push_back(center_data); }
         msg.data.push_back(ir_sensor_right.readRangeContinuousMillimeters(client, srv));
         msg.data.push_back(ir_sensor_left.readRangeContinuousMillimeters(client, srv));
-/*       ROS_WARN("IR sensor 1 distance: %umm", ir_sensor_1.readRangeContinuousMillimeters(client, srv));
-       ROS_WARN("IR sensor 2 distance: %umm", ir_sensor_2.readRangeContinuousMillimeters(client, srv));
-       ROS_WARN("IR sensor 3 distance: %umm", ir_sensor_3.readRangeContinuousMillimeters(client, srv));
-*/
         // Broadcast message to subscribers
         ir_pub.publish(msg);
         ros::spinOnce();
