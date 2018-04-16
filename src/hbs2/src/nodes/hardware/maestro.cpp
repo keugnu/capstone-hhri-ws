@@ -130,9 +130,9 @@ int main(int argc, char** argv) {
 	ros::ServiceServer srv = n.advertiseService("servo_srv", handle_req);
 	ROS_INFO("ROS servo service has started.");
 	
-	if (init_pos()) { ros::spin() }
+	if (init_pos()) { ros::spin(); }
 	else { 
-		ROS_CRIT("Failed to initialize servo. Exiting...");
+		ROS_FATAL("Failed to initialize servo. Exiting...");
 		exit(1);
 	}
 	
