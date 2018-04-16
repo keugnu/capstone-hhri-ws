@@ -42,7 +42,7 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
     switch (req.command) {
         case 1: {
             ROS_INFO("Serving request to read sonar sensor.");
-            if (sonar_client.call(srv_sonar) {
+            if (sonar_client.call(srv_sonar)) {
                 res.data = srv_sonar.response.data;
                 ROS_INFO("Sonar measurement service request call from the IoT service has completed successfully.");
                 return true;
@@ -68,7 +68,7 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
             ROS_INFO("Serving request to shake head.");
             srv_servo.request.command = 2;
             srv_servo.request.speed = 100;
-            if (servo_client.call(srv_servo)) { ROS_DEBUG("Servo speed has changed to 100 RPM.") }
+            if (servo_client.call(srv_servo)) { ROS_DEBUG("Servo speed has changed to 100 RPM."); }
             else {
                 ROS_ERROR("Request to change speed of the servo has failed in iot_srv.");
                 return false;
