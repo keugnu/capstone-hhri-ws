@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
     if (write_init(client, srv)) {
         if (touch_init(client, srv)) {
             if (reg_setup(client, srv)) {
-                ROS_INFO("MPR121 initialized successfully.")
+                ROS_INFO("MPR121 initialized successfully.");
                 while (ros::ok()) {
                     // Stuff message object with data and then publish
                     std_msgs::UInt8 msg;
