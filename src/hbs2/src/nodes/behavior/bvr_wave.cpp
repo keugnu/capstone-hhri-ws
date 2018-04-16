@@ -23,7 +23,8 @@ void wave_callback(const std_msgs::UInt8::ConstPtr& msg) {
 
     if (msg->data == 1) {
         srv_tts.request.text = "Hello";
-        tts_client.call(srv_tts);
+        if (tts_client.call(srv_tts)) { ROS_INFO("TTS service call from wave behavior completed successfully."); }
+        else { ROS_ERROR("TTS service call from wave behavior failed."); }
     }
 }
 

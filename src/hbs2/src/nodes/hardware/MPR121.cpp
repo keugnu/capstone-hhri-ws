@@ -10,20 +10,20 @@
 #include "hbs2/i2c_bus.h"
 #include "std_msgs/UInt8.h"
 
+
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.size = 4;
     srv.request.request = {0x00, 0x5A, 0x00, 0x00};
     usleep(1000);
-    client.call(srv);
-    if(!srv.response.success) return false;
-    else return true;
+    if (client.call(srv)) { return false; }
+    else { return true; }
 }
 
 // Perform soft reset and start with MPR121 in "Stop mode" to prevent random reads.
 bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
-    srv.request.request = {0x02, 0x5A, (uint8_t)0x80, 0x63}; //write to reg 0x80
+    srv.request.request = {0x02, 0x5A, (uint8_t)0x80, 0x63};
     srv.request.size = 4;
 
     if (client.call(srv)) {
@@ -32,13 +32,18 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         srv.request.size = 4;
 
         if (client.call(srv)) {
-            sleep(1);
+            usleep(1000000);
             return true;
         }
+        else {
+            ROS_ERROR("Failed to call i2c_srv: [write_init]");
+            return false;
+        }
     }
-
-    ROS_ERROR("Failed to call i2c_srv - write_init");
-    return false;
+    else { 
+        ROS_ERROR("Failed to call i2c_srv: [write_init]");
+        return false;
+    }
 }
 
 // Set up touch and release threshold registers.
@@ -61,7 +66,11 @@ bool touch_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         if (client.call(srv)) {
             thres_reg += i*2;
             srv.request.request = {0x02, 0x5A, thres_reg, touch_thres};
-        } else { ROS_ERROR("Failed to call i2c_srv for touch"); return false; }
+        }
+        else {
+            ROS_ERROR("Failed to call i2c_srv: [touch_init]");
+            return false;
+        }
     }
 
     // Set up 13 touch channels with release threshold = 6
@@ -71,7 +80,11 @@ bool touch_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         if (client.call(srv)) {
             rel_reg += i*2;
             srv.request.request = {0x02, 0x5A, rel_reg, rel_thres};
-        } else { ROS_ERROR("Failed to call i2c_srv for touch"); return false; }
+        }
+        else {
+            ROS_ERROR("Failed to call i2c_srv: [touch_init]");
+            return false;
+        }
     }
 
     return true;
@@ -142,20 +155,17 @@ uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         currentlyTouched |= readTouch[1] << 8;
         currentlyTouched &= 0x0FFF;
         
-        ROS_WARN("currentlyTouched: %x", currentlyTouched);
-
         for(int i = 0; i < 12; i++) {
             if ((currentlyTouched & (1 << i)) && !(wasTouched & (1 << i)) && (i != 4)) {
-                ROS_INFO("Pin %i was touched.\n", i);
+                ROS_DEBUG("Pin %i was touched.\n", i);
                 return i; 
             }
             if (!(currentlyTouched & (1 << i)) && (wasTouched & (1 << i))) {
-                ROS_INFO("Pin %i was released. \n", i);
+                ROS_DEBUG("Pin %i was released. \n", i);
                 return i;
             }
         }
     }
-
     return 0;
 }
 
@@ -174,6 +184,7 @@ int main(int argc, char **argv) {
     if (write_init(client, srv)) {
         if (touch_init(client, srv)) {
             if (reg_setup(client, srv)) {
+                ROS_INFO("MPR121 initialized successfully.")
                 while (ros::ok()) {
                     // Stuff message object with data and then publish
                     std_msgs::UInt8 msg;

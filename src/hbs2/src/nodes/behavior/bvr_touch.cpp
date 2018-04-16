@@ -11,6 +11,7 @@
 #include "hbs2/tts.h"
 #include "std_msgs/UInt8.h"
 
+// declare global NodeHandle
 ros::NodeHandlePtr n = NULL;
 
 /*  Function: touch_callback
@@ -20,16 +21,19 @@ ros::NodeHandlePtr n = NULL;
     outputs:
         tts_client.call: Sends a request to the TTS service
 */
-void touch_callback(const std_msgs::UInt8::ConstPtr& msg) {
-    ROS_INFO("Touch occurred at pin %u", msg->data);
-    
-    // Call tts service with text ("Thank you")
+bool touch_callback(const std_msgs::UInt8::ConstPtr& msg) {
+    ROS_DEBUG("Touch occurred at pin %u", msg->data);
+
     ros::ServiceClient tts_client = n->serviceClient<hbs2::tts>("tts_srv");
     hbs2::tts srv_tts;
 
     if (msg->data == 1 || msg->data == 3) {
         srv_tts.request.text = "Thank you";
-        tts_client.call(srv_tts);
+        if(tts_client.call(srv_tts)) {
+            ROS_INFO("TTS service call from touch behavior completed successfully.");
+            return true;
+        }
+        else { ROS_ERROR("TTS service call from touch behavior failed."); }
     }
 }
 
