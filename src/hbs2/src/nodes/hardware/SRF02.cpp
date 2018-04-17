@@ -29,6 +29,7 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.request = {0x02, 0x70, 0x00, 0x51};
     srv.request.size = 4;
+    srv.request.bus = 0;
 
     if (client.call(srv)) {
         /* wait for job to be served in the i2c manager. */
@@ -47,9 +48,11 @@ uint16_t read_range(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(6);
     srv.request.request = {0x01, 0x70, 0x00, 0x00, 0x00, 0x00};
     srv.request.size = 6;
+    srv.request.bus = 0;
 
     if (client.call(srv)) {
         /* wait for job to be served in the i2c manager. */
+        ROS_INFO("Request to i2c manager successful. Waiting to be served.");
         while(!status_req(client, srv));
 
         uint16_t range = (uint16_t)srv.response.data.at(2);
@@ -70,7 +73,6 @@ bool report_range(hbs2::sonar::Request &req, hbs2::sonar::Response &res) {
     usleep(1000);
     uint16_t range = read_range(i2c_client, srv_i2c);
     res.data = range;
-    res.success = true;
     ROS_DEBUG("Range in centimeters: %u", range);
     return true;
 }
