@@ -232,6 +232,7 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address)
 void VL53L0X::writeReg(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t reg, uint8_t value) {
   srv.request.request.resize(4);
   srv.request.request = {0x02, address, reg, value};
+  srv.request.bus = 1;
   srv.request.size = 4;
 
   if (client.call(srv)) {
@@ -245,6 +246,7 @@ void VL53L0X::writeReg(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t r
 void VL53L0X::writeReg16Bit(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t reg, uint16_t value) {  
   srv.request.request.resize(5);
   srv.request.size = 5;
+  srv.request.bus = 1;
   srv.request.request = {0x02, address, reg, (uint8_t)((value >> 8) & 0xFF), (uint8_t)(value & 0xFF)};
 
   if (client.call(srv)) {
@@ -258,6 +260,7 @@ void VL53L0X::writeReg16Bit(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint
 void VL53L0X::writeReg32Bit(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t reg, uint32_t value) {
   srv.request.request.resize(7);
   srv.request.size = 7;
+  srv.request.bus = 1;
   srv.request.request = {0x02, address, reg, (uint8_t)((value >> 24) & 0xFF), (uint8_t)((value >> 16) && 0xFF),
 			 (uint8_t)((value >> 8) & 0xFF), (uint8_t)(value & 0xFF) };
 
@@ -273,6 +276,7 @@ void VL53L0X::writeReg32Bit(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint
 uint8_t VL53L0X::readReg(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t reg) {
   srv.request.request.resize(3);
   srv.request.size = 3;
+  srv.request.bus = 1;
   srv.request.request = {0x01, address, reg};
 
   if (client.call(srv)) {
@@ -288,6 +292,7 @@ uint16_t VL53L0X::readReg16Bit(ros::ServiceClient &client, hbs2::i2c_bus &srv, u
   uint16_t value = 0;
   srv.request.request.resize(4);
   srv.request.size = 4;
+  srv.request.bus = 1;
   srv.request.request = {0x01, address, reg, 0x00};
 
   if (client.call(srv)) {
@@ -303,6 +308,7 @@ uint32_t VL53L0X::readReg32Bit(ros::ServiceClient &client, hbs2::i2c_bus &srv, u
   uint32_t value = 0;
   srv.request.request.resize(6);
   srv.request.size = 6;
+  srv.request.bus = 1;
   srv.request.request = {0x01, address, reg, 0x00, 0x00, 0x00};
 
   if (client.call(srv)) {
@@ -320,6 +326,7 @@ uint32_t VL53L0X::readReg32Bit(ros::ServiceClient &client, hbs2::i2c_bus &srv, u
 void VL53L0X::writeMulti(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t reg, uint8_t const * src, uint8_t count) {
   srv.request.request.resize(3);
   srv.request.size = 3;
+  srv.request.bus = 1;
   srv.request.request = {0x02, address, reg};
 
   if (client.call(srv)) {
@@ -343,6 +350,7 @@ register, into the given array
 void VL53L0X::readMulti(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t reg, uint8_t * dst, uint8_t count) {
   srv.request.request.resize(count+2);
   srv.request.size = (count+2);
+  srv.request.bus = 1;
   srv.request.request = {0x01, address, reg};
   for (int i = 0; i < (count-1); i++) { srv.request.request.push_back(0x00); }
 
@@ -1022,7 +1030,7 @@ int main(int argc, char **argv) {
     ROS_INFO("VL53L0X node initialized.");
     // Create publisher:
     ros::Publisher ir_pub = n.advertise<std_msgs::UInt16MultiArray>("tpc_track", 10);
-    ros::Rate loop_rate(5);
+    ros::Rate loop_rate(10);
 
     while(ros::ok) {
         // Store data in message object and then publish

@@ -25,11 +25,13 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.request = {0x02, 0x5A, (uint8_t)0x80, 0x63};
     srv.request.size = 4;
+    srv.request.bus = 1;
 
     if (client.call(srv)) {
         srv.request.request.resize(4);
         srv.request.request = {0x02, 0x5A, 0x5E, 0x00};
         srv.request.size = 4;
+        srv.request.bus = 1;
 
         if (client.call(srv)) {
             usleep(1000000);
@@ -58,6 +60,7 @@ bool touch_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 
     srv.request.request.resize(4);
     srv.request.size = 4;
+    srv.request.bus = 1;
 
     // Set up 13 touch channels with touch threshold = 12
     srv.request.request = {0x02, 0x5A, thres_reg, touch_thres};
@@ -94,6 +97,7 @@ bool touch_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.size = 4;
+    srv.request.bus = 1;
     srv.request.request = {0x02, 0x5A, 0x00, 0x00};
 
     // MHD rising reg 0x2B, NHD rising reg 0x2C, NCL rising reg 0x2D, FDL rising reg 0x2E
@@ -142,6 +146,7 @@ uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     uint16_t wasTouched = 0x0000, readTouch[2] = {0x0000}, currentlyTouched = 0;
     srv.request.request.resize(6);
     srv.request.size = 6;
+    srv.request.bus = 1;
 
     // Touch status register = 0x00
     srv.request.request = {0x01, 0x5A, 0x00, 0x00, 0x00, 0x00};
