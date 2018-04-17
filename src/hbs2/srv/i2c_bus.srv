@@ -1,5 +1,5 @@
 uint8[] request
-int8 size
+uint8 size
+uint8 bus
 ---
-bool success
 uint8[] data

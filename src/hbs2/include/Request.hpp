@@ -27,18 +27,20 @@ class Request {
         std::string _type;
         bool _status;
         int _size;
+        int _bus;
         int _expected;
     public:
         int num_attempts;
         std::vector<uint8_t> data;
     
-        Request(const std::vector<uint8_t>, int);
+        Request(const std::vector<uint8_t>/*, int*/, uint8_t);
         uint8_t get_id();
         std::string get_type();
         bool get_status();
         void set_status(bool);
         int get_size();
         int get_expected();
+        int get_bus();
 };
 
 /*  Constructor: Request
@@ -54,7 +56,7 @@ class Request {
         _status: false
         num_attempts: 0
 */
-Request::Request(const std::vector<uint8_t> req, int num_bytes) {
+Request::Request(const std::vector<uint8_t> req/*, int num_bytes*/, uint8_t bus) {
     switch (req[0]) {
         case 0:
             _type = "status";
@@ -69,7 +71,8 @@ Request::Request(const std::vector<uint8_t> req, int num_bytes) {
 
     _id = req[1];
     _status = false;
-    _size = num_bytes;
+    _size = /*num_bytes*/ req.size();
+    _bus = bus;
     num_attempts = 0;
 
     for (int i = 0; i < _size - 2; i++) { data.push_back(req[i + 2]); }
@@ -79,6 +82,7 @@ Request::Request(const std::vector<uint8_t> req, int num_bytes) {
 /* Request class function prototypes */
 int Request::get_size() { return _size; }
 int Request::get_expected() { return _expected; }
+int Request::get_bus() { return _bus; }
 bool Request::get_status() { return _status; }
 uint8_t Request::get_id() { return _id; }
 std::string Request::get_type() { return _type; }
