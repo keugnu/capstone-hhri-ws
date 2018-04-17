@@ -23,7 +23,6 @@ ros::NodeHandlePtr n = NULL;
                 |   2: call tts service     |
                 |   3: call servo service   |
     outputs:
-        &res: res.success: boolean to report success of service call
         sonar_client.call: sends a request to the sonar service to obtain a measurement
         tts_client.call: sends a request to the tts service
         servo_client.call: sends a request to the servo service to shake the robot's head

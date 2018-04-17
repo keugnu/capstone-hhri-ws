@@ -2,4 +2,3 @@ uint8 command
 uint8 speed
 uint8 position
 ---
-bool success

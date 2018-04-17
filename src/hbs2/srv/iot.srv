@@ -1,5 +1,4 @@
 int8 command
 string text
 ---
-bool success
 uint16 data
