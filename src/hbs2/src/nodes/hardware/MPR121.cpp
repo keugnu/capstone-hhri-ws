@@ -27,11 +27,15 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.size = 4;
 
     if (client.call(srv)) {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));
         srv.request.request.resize(4);
         srv.request.request = {0x02, 0x5A, 0x5E, 0x00};
         srv.request.size = 4;
 
         if (client.call(srv)) {
+            /* wait for job to be served in the i2c manager. */
+            while(!status_req(client, srv));            
             usleep(1000000);
             return true;
         }
@@ -64,6 +68,8 @@ bool touch_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 
     for (int i = 0; i < 12; i++) {
         if (client.call(srv)) {
+            /* wait for job to be served in the i2c manager. */
+            while(!status_req(client, srv));            
             thres_reg += i*2;
             srv.request.request = {0x02, 0x5A, thres_reg, touch_thres};
         }
@@ -78,6 +84,8 @@ bool touch_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 
     for (int i = 0; i < 12; i++) {
         if (client.call(srv)) {
+            /* wait for job to be served in the i2c manager. */
+            while(!status_req(client, srv));            
             rel_reg += i*2;
             srv.request.request = {0x02, 0x5A, rel_reg, rel_thres};
         }
@@ -99,41 +107,101 @@ bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     // MHD rising reg 0x2B, NHD rising reg 0x2C, NCL rising reg 0x2D, FDL rising reg 0x2E
     srv.request.request[2] = 0x2B; srv.request.request[3] = 0x01;
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     srv.request.request[2] = 0x2C; srv.request.request[3] = 0x01; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }    
     srv.request.request[2] = 0x2D; srv.request.request[3] = 0x0E; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     srv.request.request[2] = 0x2E; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
 
     // MHD falling reg, 0x2F, NHD falling reg 0x30, NCL falling reg 0x31, FDL falling reg 0x32
     srv.request.request[2] = 0x2F; srv.request.request[3] = 0x01; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     srv.request.request[2] = 0x30; srv.request.request[3] = 0x05; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     srv.request.request[2] = 0x31; srv.request.request[3] = 0x01; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     srv.request.request[2] = 0x32; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
 
     // NHD touched reg 0x33, NCL touched 0x34, FDL touched 0x35
     srv.request.request[2] = 0x33; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     srv.request.request[2] = 0x34; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     srv.request.request[2] = 0x35; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
 
     // Debounce touch & release reg 0x5B, config 1 reg 0x5c, config 2 ref 0x5D
     srv.request.request[2] = 0x5B; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     srv.request.request[2] = 0x5C; srv.request.request[3] = 0x10; // 16uA current
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     srv.request.request[2] = 0x5D; srv.request.request[3] = 0x20; // 0.5 us encoding
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
 
     srv.request.request[2] = 0x5E; srv.request.request[3] = 0x8F;
     if (!client.call(srv)) { return false; }
+    else {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));        
+    }
     
     return true;
 } 
@@ -146,6 +214,8 @@ uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     // Touch status register = 0x00
     srv.request.request = {0x01, 0x5A, 0x00, 0x00, 0x00, 0x00};
     if (client.call(srv)) {
+        /* wait for job to be served in the i2c manager. */
+        while(!status_req(client, srv));          
         readTouch[0] = ((uint16_t)srv.response.data.at(1)) << 8;
         readTouch[0] |= ((uint16_t)srv.response.data.at(0));
         readTouch[1] = ((uint16_t)srv.response.data.at(3)) << 8;
