@@ -8,7 +8,7 @@
 #include "std_msgs/UInt16MultiArray.h"
 
 
-const int _SERVO_SPEED_ = 50;
+const int _SERVO_SPEED_ = 20;
 const int _SERVO_POS_CHANGE_ = 20;
 
 ros::NodeHandlePtr n = NULL;

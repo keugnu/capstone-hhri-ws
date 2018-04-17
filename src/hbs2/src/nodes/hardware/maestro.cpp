@@ -41,7 +41,7 @@ bool change_speed(int spd) {
 	std::stringstream ss;
 	ss << _MAESTRO_SPDCTRL_ << " " << _MAESTRO_DEV_ << " " << _MAESTRO_CHANNEL_ << " " << std::to_string(spd);
 	std::string syscomspd = ss.str();
-	if (!system((syscomspd).c_str())) { return false; }
+	if (system((syscomspd).c_str()) != 0) { return false; }
 	else { return true; }
 }
 
@@ -58,7 +58,7 @@ bool move(int pos) {
 	std::stringstream ss;
 	ss <<  _MAESTRO_POSCTRL_ << " " << _MAESTRO_DEV_ << " " << _MAESTRO_CHANNEL_ << " " << std::to_string(pos);
 	std::string syscompos = ss.str();
-	if (!system((syscompos).c_str())) { return false; }
+	if (system((syscompos).c_str()) != 0) { return false; }
 	else { return true; }
 }
 
@@ -105,7 +105,7 @@ bool init_pos() {
 	std::stringstream ss;
 	ss << _MAESTRO_POSCTRL_ << " " << _MAESTRO_DEV_ << " " << _MAESTRO_CHANNEL_ << " " << std::to_string(4500);
 	std::string syscompos = ss.str();
-	if(!system(syscompos.c_str())) {
+	if(system(syscompos.c_str()) != 0) {
 		ROS_ERROR("Servo initialization to 90 degrees failed.");
 		return false;
 	}
