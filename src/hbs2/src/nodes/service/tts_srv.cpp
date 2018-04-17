@@ -23,7 +23,7 @@ bool handle_req(hbs2::tts::Request &req, hbs2::tts::Response &res)
 {
     char buf[150];
     int str_len = sprintf(buf, "/bin/bash -c 'echo \"%s\" \u007C festival --tts'", req.text.c_str());
-    if (!system(buf)) {
+    if (system(buf) != 0) {
         ROS_ERROR("System call to festival failed.");
         return false;
     }
