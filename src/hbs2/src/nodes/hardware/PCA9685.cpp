@@ -61,7 +61,6 @@ void PCA9685::setPWMFreq(ros::ServiceClient &client, hbs2::i2c_bus &srv, float f
 
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address) {
     srv.request.request.resize(4);
-    srv.request.size = 4;
     srv.request.bus = 1;
     srv.request.request = {0x00, address, 0x00, 0x00};
     usleep(1000);
@@ -72,7 +71,6 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address)
 
 void PCA9685::setPWM(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t num, uint16_t on, uint16_t off) {
     srv.request.request.resize(7);
-    srv.request.size = 7;
     srv.request.bus = 1;
     srv.request.request = {0x02, _i2caddr, (uint8_t)(LED0_ON_L + 4*num), (uint8_t)on, (uint8_t)(on>>8), (uint8_t)off, (uint8_t)(off>>8)};
 
@@ -98,7 +96,6 @@ void PCA9685::setPin(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t num
 
 uint8_t PCA9685::read8(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t addr) {
     srv.request.request.resize(3);
-    srv.request.size = 3;
     srv.request.bus = 1;
     srv.request.request = {0x01, _i2caddr, addr};
 
@@ -113,7 +110,6 @@ uint8_t PCA9685::read8(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t a
 
 void PCA9685::write8(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t addr, uint8_t d) {
     srv.request.request.resize(4);
-    srv.request.size = 4;
     srv.request.bus = 1;
     srv.request.request = {0x02, _i2caddr, addr, d};
 

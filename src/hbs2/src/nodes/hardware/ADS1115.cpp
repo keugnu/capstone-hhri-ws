@@ -14,7 +14,6 @@
 
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address) {
     srv.request.request.resize(4);
-    srv.request.size = 4;
     srv.request.request = {0x00, address, 0x00, 0x00};
     usleep(1000);
     if (!client.call(srv)) { return false; }
@@ -25,7 +24,6 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address)
 //    @brief  Writes 16-bits to the specified destination register
 static void writeRegister(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t i2cAddress, uint8_t reg, uint16_t value) {
   srv.request.request.resize(5);
-  srv.request.size = 5;
   srv.request.bus = 1;
   srv.request.request = {0x02, i2cAddress, reg, (uint8_t)((value >> 8) & 0xFF), (uint8_t)(value & 0xFF)};
 
@@ -40,7 +38,6 @@ static void writeRegister(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_
 static uint16_t readRegister(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t i2cAddress, uint8_t reg) {
   uint16_t value = 0;
   srv.request.request.resize(4);
-  srv.request.size = 4;
   srv.request.bus = 1;
   srv.request.request = {0x01, i2cAddress, reg, 0x00};
 
