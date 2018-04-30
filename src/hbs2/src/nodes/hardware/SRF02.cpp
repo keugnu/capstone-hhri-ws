@@ -17,7 +17,7 @@ ros::NodeHandlePtr n = NULL;
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.size = 4;
-    srv.request.request = {0x00, 0x70, 0x00, 0x00};
+    srv.request.request = {0x00, 0x71, 0x00, 0x00};
     usleep(1000);
     if (client.call(srv)) { return false; }
     else { return true; }
@@ -27,9 +27,9 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 // Configure sensor and set range to centimeters
 bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
-    srv.request.request = {0x02, 0x70, 0x00, 0x51};
+    srv.request.request = {0x02, 0x71, 0x00, 0x51};
     srv.request.size = 4;
-    srv.request.bus = 0;
+    srv.request.bus = 1;
 
     if (client.call(srv)) {
         /* wait for job to be served in the i2c manager. */
@@ -46,9 +46,9 @@ uint16_t read_range(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     if (write_init(client, srv)) { ROS_INFO("SRF02 is prepared to be read."); }
 
     srv.request.request.resize(6);
-    srv.request.request = {0x01, 0x70, 0x00, 0x00, 0x00, 0x00};
+    srv.request.request = {0x01, 0x71, 0x00, 0x00, 0x00, 0x00};
     srv.request.size = 6;
-    srv.request.bus = 0;
+    srv.request.bus = 1;
 
     if (client.call(srv)) {
         /* wait for job to be served in the i2c manager. */

@@ -12,6 +12,9 @@
 #include "std_msgs/Int16.h"
 
 
+timeval timenow;
+long usecs;
+
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address) {
     srv.request.request.resize(4);
     srv.request.size = 4;
@@ -325,10 +328,10 @@ int main(int argc, char *argv[]) {
 
   // Create publisher:
   ros::Publisher adc_pub = n.advertise<std_msgs::Int16MultiArray>("tpc_adc", 5);
-  // Running at 10Hz:
-  ros::Rate loop_rate(2);
+  // Running at 5Hz:
+  ros::Rate loop_rate(5);
 
-  while(ros::ok) {        
+  while(ros::ok) {
       adc0 = ads.readADC_SingleEnded(client, srv, 0);
       adc1 = ads.readADC_SingleEnded(client, srv, 1);
       adc2 = ads.readADC_SingleEnded(client, srv, 2);

@@ -1013,24 +1013,24 @@ int main(int argc, char **argv) {
     VL53L0X ir_sensor_left(0x31);
 
     ir_sensor_right.init(client, srv, 0);
-    ir_sensor_right.setTimeout(500);
+    ir_sensor_right.setTimeout(5000);
     ir_sensor_right.startContinuous(client, srv);
     
 //    ir_sensor_center.setAddress(client, srv, 0x30);    
     ir_sensor_center.init(client, srv, 0);
-    ir_sensor_center.setTimeout(500);
+    ir_sensor_center.setTimeout(5000);
     ir_sensor_center.startContinuous(client, srv);
 
 
 //    ir_sensor_left.setAddress(client, srv, 0x31);
     ir_sensor_left.init(client, srv, 0);
-    ir_sensor_left.setTimeout(500);
+    ir_sensor_left.setTimeout(5000);
     ir_sensor_left.startContinuous(client, srv);
 
     ROS_INFO("VL53L0X node initialized.");
     // Create publisher:
     ros::Publisher ir_pub = n.advertise<std_msgs::UInt16MultiArray>("tpc_track", 10);
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(5);
 
     while(ros::ok) {
         // Store data in message object and then publish

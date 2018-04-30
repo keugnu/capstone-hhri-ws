@@ -31,7 +31,7 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(5);
     srv.request.request = {0x02, 0x18, 0x01, 0x00, 0x00};
     srv.request.size = 5;
-    srv.request.bus = 1;
+    srv.request.bus = 0;
 
     if (client.call(srv)) {
         /* wait for job to be served in the i2c manager. */
@@ -39,7 +39,7 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         srv.request.request.resize(4);
         srv.request.request = {0x02, 0x18, 0x08, 0x03};
         srv.request.size = 4;
-        srv.request.bus = 1;
+        srv.request.bus = 0;
 
         if (client.call(srv)) { 
             /* wait for job to be served in the i2c manager. */
@@ -58,7 +58,7 @@ float read_temp(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.request = {0x01, 0x18, 0x05, 0x00};
     srv.request.size = 4;
-    srv.request.bus = 1;
+    srv.request.bus = 0;
 	
     if (client.call(srv)) {
         /* wait for job to be served in the i2c manager. */

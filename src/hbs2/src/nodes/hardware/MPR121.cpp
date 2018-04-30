@@ -4,12 +4,16 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <vector>
+#include <sys/time.h>
+#include <fstream>
 
 // ROS
 #include "ros/ros.h"
 #include "hbs2/i2c_bus.h"
 #include "std_msgs/UInt8.h"
 
+timeval timenow;
+long usecs;
 
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
@@ -38,7 +42,6 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         if (client.call(srv)) {
             /* wait for job to be served in the i2c manager. */
             while(!status_req(client, srv));            
-            usleep(1000000);
             return true;
         }
         else {
@@ -104,7 +107,6 @@ bool touch_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 // Set up registers (MHD, NHD, NCL, FDL, Debounce touch & release, Baseline tracking)
 bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
-    srv.request.size = 4;
     srv.request.bus = 1;
     srv.request.request = {0x02, 0x5A, 0x00, 0x00};
 
@@ -115,19 +117,19 @@ bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
-    srv.request.request[2] = 0x2C; srv.request.request[3] = 0x01; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x2C; srv.request.request[3] = 0x01; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }    
-    srv.request.request[2] = 0x2D; srv.request.request[3] = 0x0E; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x2D; srv.request.request[3] = 0x0E; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
-    srv.request.request[2] = 0x2E; srv.request.request[3] = 0x00; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x2E; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
@@ -135,25 +137,25 @@ bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     }
 
     // MHD falling reg, 0x2F, NHD falling reg 0x30, NCL falling reg 0x31, FDL falling reg 0x32
-    srv.request.request[2] = 0x2F; srv.request.request[3] = 0x01; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x2F; srv.request.request[3] = 0x01; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
-    srv.request.request[2] = 0x30; srv.request.request[3] = 0x05; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x30; srv.request.request[3] = 0x05; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
-    srv.request.request[2] = 0x31; srv.request.request[3] = 0x01; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x31; srv.request.request[3] = 0x01; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
-    srv.request.request[2] = 0x32; srv.request.request[3] = 0x00; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x32; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
@@ -161,19 +163,19 @@ bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     }
 
     // NHD touched reg 0x33, NCL touched 0x34, FDL touched 0x35
-    srv.request.request[2] = 0x33; srv.request.request[3] = 0x00; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x33; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
-    srv.request.request[2] = 0x34; srv.request.request[3] = 0x00; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x34; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
-    srv.request.request[2] = 0x35; srv.request.request[3] = 0x00; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x35; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
@@ -181,26 +183,26 @@ bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     }
 
     // Debounce touch & release reg 0x5B, config 1 reg 0x5c, config 2 ref 0x5D
-    srv.request.request[2] = 0x5B; srv.request.request[3] = 0x00; 
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x5B; srv.request.request[3] = 0x00; 
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
-    srv.request.request[2] = 0x5C; srv.request.request[3] = 0x10; // 16uA current
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x5C; srv.request.request[3] = 0x10; // 16uA current
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
-    srv.request.request[2] = 0x5D; srv.request.request[3] = 0x20; // 0.5 us encoding
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x5D; srv.request.request[3] = 0x20; // 0.5 us encoding
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
         while(!status_req(client, srv));        
     }
 
-    srv.request.request[2] = 0x5E; srv.request.request[3] = 0x8F;
+    srv.request.request[0] = 0x02; srv.request.request[2] = 0x5E; srv.request.request[3] = 0x8F;
     if (!client.call(srv)) { return false; }
     else {
         /* wait for job to be served in the i2c manager. */
@@ -211,6 +213,9 @@ bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 } 
 
 uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
+    std::ofstream outfile;
+    outfile.open("/tmp/bvr_touch_timings.txt", std::ios::app);
+
     uint16_t wasTouched = 0x0000, readTouch[2] = {0x0000}, currentlyTouched = 0;
     srv.request.request.resize(6);
     srv.request.size = 6;
@@ -220,7 +225,8 @@ uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request = {0x01, 0x5A, 0x00, 0x00, 0x00, 0x00};
     if (client.call(srv)) {
         /* wait for job to be served in the i2c manager. */
-        while(!status_req(client, srv));          
+        while(!status_req(client, srv));
+         
         readTouch[0] = ((uint16_t)srv.response.data.at(1)) << 8;
         readTouch[0] |= ((uint16_t)srv.response.data.at(0));
         readTouch[1] = ((uint16_t)srv.response.data.at(3)) << 8;
@@ -232,15 +238,23 @@ uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         
         for(int i = 0; i < 12; i++) {
             if ((currentlyTouched & (1 << i)) && !(wasTouched & (1 << i)) && (i != 4)) {
-                ROS_DEBUG("Pin %i was touched.\n", i);
+                if (i == 1 || i == 3) {
+                    gettimeofday(&timenow, NULL);
+                    usecs = timenow.tv_sec*1000000 + timenow.tv_usec;
+                    outfile << "read " << usecs << '\n';
+                    ROS_DEBUG("Pin %i was touched.", i);
+                    outfile.close();
+                }
                 return i; 
             }
             if (!(currentlyTouched & (1 << i)) && (wasTouched & (1 << i))) {
-                ROS_DEBUG("Pin %i was released. \n", i);
+                ROS_DEBUG("Pin %i was released.", i);
                 return i;
             }
         }
+    
     }
+
     return 0;
 }
 
@@ -271,7 +285,9 @@ int main(int argc, char **argv) {
                     loop_rate.sleep();
                 }
             }
+            else { ROS_ERROR("MPR121 [reg_setup] failed."); }
         }
+        else { ROS_ERROR("MPR121 [write_init] failed."); }
     }
 
     return 0;

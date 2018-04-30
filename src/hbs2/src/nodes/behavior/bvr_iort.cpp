@@ -100,8 +100,7 @@ void rest_req(Response &resp, std::string uri) {
         &n: ROS NodeHandle for this Node
     outputs:
         iot_client.call: sends a request to the iot service for actions and/or data collection
-        iot_srv.response.data: response to client with data from sensor
-        iot_srv.response.success: boolean for successful request
+        iot_srv.response.data: response to client with data from sensor        
 */
 void begin(ros::NodeHandle &n) {
     m_pBuffer = (char*) malloc(MAX_FILE_LENGTH * sizeof(char));
@@ -127,7 +126,6 @@ void begin(ros::NodeHandle &n) {
                 req.request.command = 1
 
                 check for success and return data back to api client
-                if res.response.success == true
                     create rest_req(resp, set_resp_uri)
             */
             srv_iot.request.command = 1;
@@ -146,7 +144,7 @@ void begin(ros::NodeHandle &n) {
                 req.request.text = resp.content
 
                 check for success
-                res.resonse.success == true
+                else error
             */
             srv_iot.request.command = 2;
             srv_iot.request.text = resp.content;
@@ -160,15 +158,31 @@ void begin(ros::NodeHandle &n) {
                 req.request.command = 3
             
                 check for success
-                if res.response.success == true
+                else error
             */
             srv_iot.request.command = 3;
             if (iot_client.call(srv_iot)) { ROS_INFO("Request to shake head completed."); }
             else { ROS_ERROR("Request to iot_srv to shake head has failed."); }
             break;
         }
+        case 4: {
+            ROS_DEBUG("A request to read the temperature sensor has been made.");
+            /*  send request to iot_srv
+                req.request.command = 4
+
+                check for success and return data back to api client
+                    create rest_req(resp, set_resp_uri)
+            */
+            srv_iot.request.command = 4;
+            if (iot_client.call(srv_iot)) {
+                ROS_INFO("Sending temperature data to remote IoT client.");
+                rest_req(resp, set_resp_uri + std::to_string(srv_iot.response.data));
+            }
+            else { ROS_ERROR("Request to iot_srv for reading sonar failed."); }
+            break;
+        }
         default:
-            ROS_INFO("[ROS IoT] No action taken.");
+            ROS_DEBUG("[ROS IoT] No action taken.");
             break;
     }
 }
@@ -184,7 +198,7 @@ void begin(ros::NodeHandle &n) {
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "iort");
     ros::NodeHandle n;
-    ros::Rate loop_rate(2);
+    ros::Rate loop_rate(1);
     
     while(ros::ok()) {
         begin(n);

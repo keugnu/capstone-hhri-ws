@@ -10,6 +10,7 @@
 #include "hbs2/sonar.h"
 #include "hbs2/tts.h"
 #include "hbs2/servo.h"
+#include "hbs2/temp.h"
 
 // Declare a global NodeHandle
 ros::NodeHandlePtr n = NULL;
@@ -22,21 +23,25 @@ ros::NodeHandlePtr n = NULL;
                 |   1: call sonar service   |
                 |   2: call tts service     |
                 |   3: call servo service   |
+                |   4: call to temp service |
     outputs:
         sonar_client.call: sends a request to the sonar service to obtain a measurement
         tts_client.call: sends a request to the tts service
         servo_client.call: sends a request to the servo service to shake the robot's head
+        temp_srv.call: sends a request to the temperature service to obtain a measurement
 */
 bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
-    ROS_INFO("Serving request from [iort] node.");
+    ROS_INFO("Serving request from [bvr_iort] node.");
     
     ros::ServiceClient sonar_client = n->serviceClient<hbs2::sonar>("sonar_srv");
     ros::ServiceClient tts_client = n->serviceClient<hbs2::tts>("tts_srv");
     ros::ServiceClient servo_client = n->serviceClient<hbs2::servo>("servo_srv");
+    ros::ServiceClient temp_client = n->serviceClient<hbs2::temp>("temp_srv");
 
     hbs2::sonar srv_sonar;
     hbs2::tts srv_tts;
     hbs2::servo srv_servo;
+    hbs2::temp srv_temp;
 
     switch (req.command) {
         case 1: {
@@ -82,7 +87,7 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
                     srv_servo.request.position = 120;
                 servo_client.call(srv_servo);
                 // wait some time for the previous movement to complete
-                usleep(400000);
+                usleep(300000);
             }
 
             srv_servo.request.position = 90;
@@ -92,6 +97,18 @@ bool handle_req(hbs2::iot::Request &req, hbs2::iot::Response &res) {
             }
             else {
                 ROS_ERROR("Request to shake head has failed in iot_srv.");
+                return false;
+            }
+        }
+        case 4: {
+            ROS_INFO("Serving request to read temperature sensor.");
+            if (temp_client.call(srv_temp)) {
+                res.data = srv_temp.response.data;
+                ROS_INFO("Temperature measurement service request call from the IoT service has completed successfully.");
+                return true;
+            }
+            else {
+                ROS_ERROR("Request to read temperature sensor failed in iot_srv.");
                 return false;
             }
         }
@@ -115,7 +132,6 @@ int main(int argc, char **argv) {
     ros::ServiceServer srv = n->advertiseService("iot_srv", handle_req);
 
     ROS_INFO("ROS IoT Service has started.");
-    ros::Rate loop_rate(10);
     ros::spin();
     return 0;
 }

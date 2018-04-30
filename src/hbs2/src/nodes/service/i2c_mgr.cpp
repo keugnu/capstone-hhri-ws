@@ -5,6 +5,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
+#include <sys/time.h>
 
 // ROS
 #include "ros/ros.h"
@@ -21,7 +22,7 @@ std::queue<Request> work_queue, completed_queue;
 
 
 bool write_req(Request* job) {
-    ROS_DEBUG("A write request has been made for device %X", job->get_id());
+    ROS_DEBUG("A write request has been made for device %X.", job->get_id());
 
     if (job->get_bus() == 0) {
         if ((fd = open(iic_dev_0, O_RDWR)) < 0) {
@@ -71,7 +72,7 @@ bool write_req(Request* job) {
 
 
 bool read_req(Request* job) {
-    ROS_DEBUG("A read request has been made for device %X", job->get_id());
+    ROS_DEBUG("A read request has been made for device %X.", job->get_id());
     
     if (job->get_bus() == 0) {
         if ((fd = open(iic_dev_0, O_RDWR)) < 0) {
@@ -133,7 +134,7 @@ bool handle_req(hbs2::i2c_bus::Request &req, hbs2::i2c_bus::Response &res) {
     
     /* check to see if the request is for status and serve it first if so. */
     if (request.get_type() == "status") {
-        ROS_DEBUG("A request has been made for the status of device %X", req.request[1]);
+        ROS_DEBUG("A request has been made for the status of device %X.", req.request[1]);
         /* find the job that the request for status is for. it should be in the completed queue. */
         for (int i = 0; i < completed_queue.size(); i++) {
             Request job = completed_queue.front();

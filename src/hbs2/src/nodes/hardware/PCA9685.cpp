@@ -125,68 +125,69 @@ void PCA9685::write8(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t add
 }
 
 
+void pca9685_init() {
+    ros::ServiceClient client = n->serviceClient<hbs2::i2c_bus>("i2c_srv");
+    hbs2::i2c_bus srv;
+
+    unsigned char addr = 0x40;
+	PCA9685 pwm;
+
+	pwm = PCA9685(addr);
+    pwm.begin(client, srv);
+	pwm.setPWMFreq(client, srv, 1600);
+}
+
 bool handle_req(hbs2::led::Request &req, hbs2::led::Response &res) {
     ros::ServiceClient client = n->serviceClient<hbs2::i2c_bus>("i2c_srv");
     hbs2::i2c_bus srv;
 
     unsigned char addr = 0x40;
 	PCA9685 pwm;
-       
 	pwm = PCA9685(addr);
-
-    pwm._RedPin      = 0;
-    pwm._GreenPin    = 1;
-    pwm._BluePin     = 2;
-
-	pwm.begin(client, srv);
-	pwm.setPWMFreq(client, srv, 1600);
-
-    pwm.setPin(client, srv, pwm._GreenPin, 0, 0);
-    pwm.setPin(client, srv, pwm._BluePin, 0, 0);
-    pwm.setPin(client, srv, pwm._RedPin, 0, 0);
 
     switch(req.color) {    
         // red
-        case 1:
-            pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
-            pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
-            pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
+        case 1: {
+            pwm.setPWM(client, srv, 0, 0, 2048);
             break;
+        }
         // blue
-        case 2:
-            pwm.setPWM(client, srv, pwm._RedPin, 0, 0);
-            pwm.setPWM(client, srv, pwm._BluePin, 0, 2048);
-            pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
+        case 2: {
+            pwm.setPWM(client, srv, 2, 0, 2048);
             break;
+        }
         // green
-        case 3:
-            pwm.setPWM(client, srv, pwm._RedPin, 0, 0);
-            pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
-            pwm.setPWM(client, srv, pwm._GreenPin, 0, 2048);
+        case 3: {
+            pwm.setPWM(client, srv, 1, 0, 2048);
             break;
+        }
         // yellow
-        case 4:
-            pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
-            pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
-            pwm.setPWM(client, srv, pwm._GreenPin, 0, 1000);
+        case 4: {
+            pwm.setPWM(client, srv, 0, 0, 2048);
+            pwm.setPWM(client, srv, 1, 0, 1024);
             break;
+        }
         // white
-        case 5:
-            pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
-            pwm.setPWM(client, srv, pwm._BluePin, 0, 2048);
-            pwm.setPWM(client, srv, pwm._GreenPin, 0, 2048);
+        case 5: {
+            pwm.setPWM(client, srv, 0, 0, 2048);
+            pwm.setPWM(client, srv, 2, 0, 2048);
+            pwm.setPWM(client, srv, 1, 0, 2048);
             break;
+        }
         // pink
-        case 6:
-            pwm.setPWM(client, srv, pwm._RedPin, 0, 2048);
-            pwm.setPWM(client, srv, pwm._BluePin, 0, 2048);
-            pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
+        case 6: {
+            pwm.setPWM(client, srv, 0, 0, 2048);
+            pwm.setPWM(client, srv, 1, 0, 512);
             break;
+        }
         // off
+        case 0: {
+            pwm.setPWM(client, srv, 2, 0, 0);
+            pwm.setPWM(client, srv, 1, 0, 0);
+            pwm.setPWM(client, srv, 0, 0, 0);
+            break;
+        }
         default:
-            pwm.setPWM(client, srv, pwm._RedPin, 0, 0);
-            pwm.setPWM(client, srv, pwm._BluePin, 0, 0);
-            pwm.setPWM(client, srv, pwm._GreenPin, 0, 0);
             break;
     }
 }
@@ -195,8 +196,10 @@ int main(int argc, char **argv) {
 	ros::init(argc, argv, "pca9685");
     n = ros::NodeHandlePtr(new ros::NodeHandle);
 
-    ros::ServiceServer srv = n->advertiseService("led", handle_req);
+    pca9685_init();
+    ros::ServiceServer srv = n->advertiseService("led_srv", handle_req);
     ROS_INFO("ROS LED service has started.");
+
     ros::spin();
 
 	return 0;
