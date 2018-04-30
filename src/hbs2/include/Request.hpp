@@ -11,6 +11,7 @@
         _type: type of request (read, write, status)
         _status: true if request is fullfilled, else false
         _size: size of incoming request in bytes
+        _bus: hardware bus number the device lives on
         _expected: number of expected bytes returned from device for read request
         num_attempts: number of attempts the request was served
         data: request data vector
@@ -20,6 +21,7 @@
         get_status: gets the current status of the request
         get_size: gets the size of the request
         get_expected: gets the expected number of bytes that should be returned by the device
+        get_bus: gets the hardware bus number the device is available on
 */
 class Request {
     private:
@@ -51,7 +53,7 @@ class Request {
                 req[1]: address of the device
                 req[2n]: register address
                 req[2n+1]: data byte for write request on registers 2n
-        num_bytes: size of req[]
+        bus: hardware bus number
     defaults:
         _status: false
         num_attempts: 0

@@ -312,7 +312,6 @@ bool ZX_Sensor::clearRegisterBit(ros::ServiceClient &client, hbs2::i2c_bus &srv,
 
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address) {
     srv.request.request.resize(4);
-    srv.request.size = 4;
     srv.request.bus = 1;
     srv.request.request = {0x00, address, 0x00, 0x00};
     usleep(1000);
@@ -329,7 +328,6 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address)
  */
 bool ZX_Sensor::wireWriteDataByte(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t reg, uint8_t val) {
     srv.request.request.resize(4);
-    srv.request.size = 4;
     srv.request.bus = 1;
     srv.request.request = {0x02, addr_, reg, val};
 
@@ -353,7 +351,6 @@ bool ZX_Sensor::wireWriteDataByte(ros::ServiceClient &client, hbs2::i2c_bus &srv
  */
 bool ZX_Sensor::wireReadDataByte(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t reg, uint8_t &val) {
     srv.request.request.resize(3);
-    srv.request.size = 3;
     srv.request.bus = 1;
     srv.request.request = {0x01, addr_, reg};
 

@@ -1,5 +1,4 @@
 uint8[] request
-uint8 size
 uint8 bus
 ---
 uint8[] data

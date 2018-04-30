@@ -16,8 +16,8 @@ ros::NodeHandlePtr n = NULL;
 
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
-    srv.request.size = 4;
     srv.request.request = {0x00, 0x71, 0x00, 0x00};
+
     usleep(1000);
     if (client.call(srv)) { return false; }
     else { return true; }
@@ -28,7 +28,6 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.request = {0x02, 0x71, 0x00, 0x51};
-    srv.request.size = 4;
     srv.request.bus = 1;
 
     if (client.call(srv)) {
@@ -47,7 +46,6 @@ uint16_t read_range(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
 
     srv.request.request.resize(6);
     srv.request.request = {0x01, 0x71, 0x00, 0x00, 0x00, 0x00};
-    srv.request.size = 6;
     srv.request.bus = 1;
 
     if (client.call(srv)) {
