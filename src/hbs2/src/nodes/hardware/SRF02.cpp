@@ -40,7 +40,15 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     return false;
 }
 
-// Read range from register (result is 4 bytes)
+/*  Function: read_range
+    desc: Performs a request to the i2c bus manager service to read the device.
+    inputs:
+        &client: i2c bus manager service client object
+        &srv: i2c bus manager request inputs object
+    outputs:
+        client.call: Sends a request to the i2c bus manager
+        uint16: two byte result which is the measurement received from the sensor
+*/
 uint16_t read_range(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     if (write_init(client, srv)) { ROS_INFO("SRF02 is prepared to be read."); }
 
@@ -64,18 +72,32 @@ uint16_t read_range(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     }
 }
 
-
+/*  Function: report_range
+    desc: Callback function for the sonar service. Sends a request to read a measurement from the sensor.
+    inputs:
+        &req: sonar service request inputs object
+        argv: sonar service response outputs object
+    outputs:
+        bool: true if a measurement was received from the device sucessfully, else false
+*/
 bool report_range(hbs2::sonar::Request &req, hbs2::sonar::Response &res) {
     ros::ServiceClient i2c_client = n->serviceClient<hbs2::i2c_bus>("i2c_srv");
     hbs2::i2c_bus srv_i2c;
     usleep(1000);
     uint16_t range = read_range(i2c_client, srv_i2c);
-    res.data = range;
     ROS_DEBUG("Range in centimeters: %u", range);
-    return true;
+    if (range > 0) { res.data = range; return true; }
+    else { return false; }
 }
 
-
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
     // Initialize sonar sensor node
     ros::init(argc, argv, "srf02");

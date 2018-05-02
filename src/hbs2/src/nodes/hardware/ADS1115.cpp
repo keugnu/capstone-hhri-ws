@@ -12,9 +12,17 @@
 #include "std_msgs/Int16.h"
 
 
-timeval timenow;
-long usecs;
-
+/*  Function: status_req (status request)
+    desc: Sends a request to the i2c bus manager for the status of the current read or
+          write request for a device.
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+        address: i2c device address making the request
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        bool: true if the status of the previous request is complete, o/w false
+*/
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address) {
     srv.request.request.resize(4);
     srv.request.request = {0x00, address, 0x00, 0x00};
@@ -313,6 +321,14 @@ int16_t ADS1115::getLastConversionResults(ros::ServiceClient &client, hbs2::i2c_
 // ads.setGain(GAIN_FOUR);       // 4x gain   +/- 1.024V  1 bit = 0.5mV    0.03125mV
 // ads.setGain(GAIN_EIGHT);      // 8x gain   +/- 0.512V  1 bit = 0.25mV   0.015625mV
 // ads.setGain(GAIN_SIXTEEN);    // 16x gain  +/- 0.256V  1 bit = 0.125mV  0.0078125mV
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char *argv[]) {
   ros::init(argc, argv, "ads1115");
   ros::NodeHandle n;

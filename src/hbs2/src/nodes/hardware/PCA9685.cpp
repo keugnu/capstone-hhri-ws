@@ -48,17 +48,27 @@ void PCA9685::setPWMFreq(ros::ServiceClient &client, hbs2::i2c_bus &srv, float f
     uint8_t prescale = floor(prescaleval + 0.5);
     
     uint8_t oldmode = read8(client, srv, PCA9685_MODE1);
-    uint8_t newmode = (oldmode & 0x7F) | 0x10; //sleep
-    write8(client, srv, PCA9685_MODE1, newmode);            //go to sleep
-    write8(client, srv, PCA9685_MODE1, prescale);           //set the prescaler
+    uint8_t newmode = (oldmode & 0x7F) | 0x10;              // sleep
+    write8(client, srv, PCA9685_MODE1, newmode);            // go to sleep
+    write8(client, srv, PCA9685_MODE1, prescale);           // set the prescaler
     write8(client, srv, PCA9685_MODE1, oldmode);
 
     usleep(5);
 
-    write8(client, srv, PCA9685_MODE1, oldmode | 0xa0);   /*This sets the MODE1 register to turn on auto increment; */
+    write8(client, srv, PCA9685_MODE1, oldmode | 0xa0);   /* This sets the MODE1 register to turn on auto increment */
 }
 
-
+/*  Function: status_req (status request)
+    desc: Sends a request to the i2c bus manager for the status of the current read or
+          write request for a device.
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+        address: i2c device address making the request
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        bool: true if the status of the previous request is complete, o/w false
+*/
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t address) {
     srv.request.request.resize(4);
     srv.request.bus = 1;
@@ -120,7 +130,13 @@ void PCA9685::write8(ros::ServiceClient &client, hbs2::i2c_bus &srv, uint8_t add
     else { ROS_ERROR("Unable to write for LED Driver"); }
 }
 
-
+/*  Function: pca9685_init (pca9685 initialization)
+    desc: Starts the initialization of the device registers
+    inputs:
+        None
+    outputs:
+        None
+*/
 void pca9685_init() {
     ros::ServiceClient client = n->serviceClient<hbs2::i2c_bus>("i2c_srv");
     hbs2::i2c_bus srv;
@@ -133,6 +149,15 @@ void pca9685_init() {
 	pwm.setPWMFreq(client, srv, 1600);
 }
 
+/*	Function: handle_req (handle request)
+	desc:	The callback function for the service request. Interprets the service input and
+			sends commands via func:move or func:change_speed.
+	inputs:
+		&req:	service request content object
+		&res:	service repsone content object
+	outputs:
+		&res:	service response content object
+*/
 bool handle_req(hbs2::led::Request &req, hbs2::led::Response &res) {
     ros::ServiceClient client = n->serviceClient<hbs2::i2c_bus>("i2c_srv");
     hbs2::i2c_bus srv;
@@ -141,6 +166,11 @@ bool handle_req(hbs2::led::Request &req, hbs2::led::Response &res) {
 	PCA9685 pwm;
 	pwm = PCA9685(addr);
 
+    //
+    //  WARNING:    COLORS ARE SET ONE AT A TIME. IT IS SUSPECTED THAT THIS IS THE REASON WHY
+    //              THERE ARE ISSUES WITH THE LEDs DISPLAYING SOME UNNATURAL COLORS WHEN CHANGING.
+    //              THE DELAY BETWEEN COLORS MAY EXIST BECAUSE OF COMPETITION FOR BUS MANAGER TIME.
+    //
     switch(req.color) {    
         // red
         case 1: {
@@ -188,6 +218,14 @@ bool handle_req(hbs2::led::Request &req, hbs2::led::Response &res) {
     }
 }
 
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "pca9685");
     n = ros::NodeHandlePtr(new ros::NodeHandle);

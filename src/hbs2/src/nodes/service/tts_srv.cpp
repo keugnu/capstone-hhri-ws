@@ -18,6 +18,7 @@ ros::NodeHandlePtr n = NULL;
         &req: req.text: text to be sent to TTS application
     outputs:
         &res: response.success: boolean for successful system call
+        bool: true is the system call was successful, o/w false
 */
 bool handle_req(hbs2::tts::Request &req, hbs2::tts::Response &res)
 {

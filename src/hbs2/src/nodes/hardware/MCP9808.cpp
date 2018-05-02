@@ -17,6 +17,16 @@
 // declare global NodeHandle
 ros::NodeHandlePtr n = NULL;
 
+/*  Function: status_req (status request)
+    desc: Sends a request to the i2c bus manager for the status of the current read or
+          write request for a device.
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        bool: true if the status of the previous request is complete, o/w false
+*/
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.request = {0x00, 0x18, 0x00, 0x00};
@@ -25,7 +35,15 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     else { return true; }
 }
 
-// Configure sensor and set temperature resolution
+/*  Function: write_init (write initialization)
+    desc: Initializes the sensor by configuring the sensor and setting temperature resolution
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        bool: true if the status of the i2c bus requests complete successfully, o/w false
+*/
 bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(5);
     srv.request.request = {0x02, 0x18, 0x01, 0x00, 0x00};
@@ -52,7 +70,15 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     }
 }
 
-// Read temperature from register
+/*  Function: read_temp (read temperature)
+    desc: Reads temperature from the sensor
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        float: the current ambient temperature reading from the sensor in celsius, o/w 1.0
+*/
 float read_temp(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.request = {0x01, 0x18, 0x05, 0x00};
@@ -73,7 +99,18 @@ float read_temp(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     }
 }
 
-// Report temp
+/*  Function: report_temp (report temperature)
+    desc: Calls read_temp and
+    inputs:
+        &req: temperature service request input object
+        &res: temperature service response output object
+    outputs:
+        bool: true of the service call was successful and a measurement has been received from the device
+
+
+    WARNING:    THIS FUNCTION MAY NOT BE NEEDED. WRITE_INIT SHOULD NOT BE CALLED IN THIS FUNCTION.
+                PART OF THIS FUNCTION IS LEFT OVER FROM WHEN THIS NODE WAS A PUBLISHER.
+*/
 bool report_temp(hbs2::temp::Request &req, hbs2::temp::Response &res) {
     ros::ServiceClient client = n->serviceClient<hbs2::i2c_bus>("i2c_srv");
     hbs2::i2c_bus srv;
@@ -90,7 +127,14 @@ bool report_temp(hbs2::temp::Request &req, hbs2::temp::Response &res) {
     }
 }
 
-
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
 
     // Initialize temp sensor node

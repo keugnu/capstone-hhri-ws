@@ -4,17 +4,24 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <vector>
-#include <sys/time.h>
-#include <fstream>
 
 // ROS
 #include "ros/ros.h"
 #include "hbs2/i2c_bus.h"
 #include "std_msgs/UInt8.h"
 
-timeval timenow;
-long usecs;
 
+/*  Function: status_req (status request)
+    desc: Sends a request to the i2c bus manager for the status of the current read or
+          write request for a device.
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+        address: i2c device address making the request
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        bool: true if the status of the previous request is complete, o/w false
+*/
 bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.request = {0x00, 0x5A, 0x00, 0x00};
@@ -23,7 +30,15 @@ bool status_req(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     else { return true; }
 }
 
-// Perform soft reset and start with MPR121 in "Stop mode" to prevent random reads.
+/*  Function: write_init (write initialization)
+    desc: Performs soft reset and start with MPR121 in "Stop mode" to prevent random reads.
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        bool: true if the status of the i2c bus requests complete successfully, o/w false
+*/
 bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.request = {0x02, 0x5A, (uint8_t)0x80, 0x63};
@@ -42,17 +57,25 @@ bool write_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
             return true;
         }
         else {
-            ROS_ERROR("Failed to call i2c_srv: [write_init]");
+            ROS_ERROR("Failed to call i2c_srv: [MPR121 write_init]");
             return false;
         }
     }
     else { 
-        ROS_ERROR("Failed to call i2c_srv: [write_init]");
+        ROS_ERROR("Failed to call i2c_srv: [MPR121 write_init]");
         return false;
     }
 }
 
-// Set up touch and release threshold registers.
+/*  Function: touch_init (touch initialization)
+    desc: Configures the touch and release threshold registers.
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        bool: true if the status of the i2c bus requests complete successfully, o/w false
+*/
 bool touch_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     // Touch and release threshold registers 
     uint16_t thres_reg = 0x41;
@@ -96,11 +119,18 @@ bool touch_init(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
             return false;
         }
     }
-
     return true;
 }
 
-// Set up registers (MHD, NHD, NCL, FDL, Debounce touch & release, Baseline tracking)
+/*  Function: reg_init (registers initialization)
+    desc: Set up registers (MHD, NHD, NCL, FDL, Debounce touch & release, Baseline tracking)
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        bool: true if the status of the i2c bus requests complete successfully, o/w false
+*/
 bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     srv.request.request.resize(4);
     srv.request.bus = 1;
@@ -208,10 +238,16 @@ bool reg_setup(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     return true;
 } 
 
+/*  Function: report_touch
+    desc: Reads for touches on the device.
+    inputs:
+        &client: i2c bus manager client object
+        &srv: i2c bus manager service inputs object
+    outputs:
+        client.call: Sends a request to the i2c bus manager service
+        uint8: Pin number which has registered a touch, o/w 255
+*/
 uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
-    std::ofstream outfile;
-    outfile.open("/tmp/bvr_touch_timings.txt", std::ios::app);
-
     uint16_t wasTouched = 0x0000, readTouch[2] = {0x0000}, currentlyTouched = 0;
     srv.request.request.resize(6);
     srv.request.bus = 1;
@@ -230,16 +266,13 @@ uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
         currentlyTouched = readTouch[0];
         currentlyTouched |= readTouch[1] << 8;
         currentlyTouched &= 0x0FFF;
-        
+
         for(int i = 0; i < 12; i++) {
+            //
+            //  WARNING:    PIN 4 IS ALWAYS REGISTERING A TOUCH
+            //
             if ((currentlyTouched & (1 << i)) && !(wasTouched & (1 << i)) && (i != 4)) {
-                if (i == 1 || i == 3) {
-                    gettimeofday(&timenow, NULL);
-                    usecs = timenow.tv_sec*1000000 + timenow.tv_usec;
-                    outfile << "read " << usecs << '\n';
-                    ROS_DEBUG("Pin %i was touched.", i);
-                    outfile.close();
-                }
+                if (i == 1 || i == 3) { ROS_DEBUG("Pin %i was touched.", i); }
                 return i; 
             }
             if (!(currentlyTouched & (1 << i)) && (wasTouched & (1 << i))) {
@@ -250,9 +283,17 @@ uint8_t report_touch(ros::ServiceClient &client, hbs2::i2c_bus &srv) {
     
     }
 
-    return 0;
+    return 255;
 }
 
+/*  Function: main
+    desc: Entry point for the Node
+    inputs:
+        argc: count of command line arguments
+        argv: array of command line arguments
+    outputs:
+        int: always 0 if exits gracefully
+*/
 int main(int argc, char **argv) {
     // Initialize touch sensor node
     ros::init(argc, argv, "mpr121");
@@ -262,8 +303,8 @@ int main(int argc, char **argv) {
     // Create publisher:
     ros::Publisher touch_pub = n.advertise<std_msgs::UInt8>("tpc_touch", 5);
 
-    // Running at 10Hz:
-    ros::Rate loop_rate(10);
+    // Running at 5Hz:
+    ros::Rate loop_rate(5);
 
     if (write_init(client, srv)) {
         if (touch_init(client, srv)) {

@@ -5,7 +5,6 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
-#include <sys/time.h>
 
 // ROS
 #include "ros/ros.h"
@@ -18,9 +17,18 @@
 static int fd;
 static char const* iic_dev_0 = "/dev/i2c-0";
 static char const* iic_dev_1 = "/dev/i2c-1";
+
 std::queue<Request> work_queue, completed_queue;
 
-
+/*  Function: write_req (write request)
+    desc:   Called by handle_req when the request type is "write." Sorts the request frame for writing to
+            multiple registers if needed. When a job has been completed, the job is placed onto a completed queue
+            for future status requests.
+    inputs:
+        *job: Request object with all request parameters and meta information for the service i2c bus request.
+    outputs:
+        bool: true when the request has been completed successfully, o/w false
+*/
 bool write_req(Request* job) {
     ROS_DEBUG("A write request has been made for device %X.", job->get_id());
 
@@ -29,7 +37,8 @@ bool write_req(Request* job) {
             ROS_ERROR("Cannot open I2C bus 0."); 
             return false;
         }
-    } else {
+    }
+    else {
         if ((fd = open(iic_dev_1, O_RDWR)) < 0) { 
             ROS_ERROR("Cannot open I2C bus 1."); 
             return false;
@@ -70,7 +79,15 @@ bool write_req(Request* job) {
     }
 }
 
-
+/*  Function: read_req (read request)
+    desc:   Called by handle_req when the request type is "read." Sorts the request frame for reading
+            multiple reads if needed. When a job has been completed, the job is placed onto a completed queue
+            for future status requests.
+    inputs:
+        *job: Request object with all request parameters and meta information for the service i2c bus request.
+    outputs:
+        bool: true when the request has been completed successfully, o/w false
+*/
 bool read_req(Request* job) {
     ROS_DEBUG("A read request has been made for device %X.", job->get_id());
     
@@ -128,7 +145,15 @@ bool read_req(Request* job) {
     }
 }
 
-
+/*  Function: handle_req (handle request)
+    desc:   Callback function for the i2c bus manager service. Determines the request type and controls the flow
+            accordingly. Status requests are handled immediately while others are added to a queue.
+    inputs:
+        &req: i2c bus manager service request inputs object
+        &res: i2c bus manager service response outputs object
+    outputs:
+        bool: true when the request has been completed successfully, o/w false
+*/
 bool handle_req(hbs2::i2c_bus::Request &req, hbs2::i2c_bus::Response &res) {
     Request request = Request(req.request/*, req.size*/, req.bus);
     
@@ -157,9 +182,9 @@ bool handle_req(hbs2::i2c_bus::Request &req, hbs2::i2c_bus::Response &res) {
     
     /* always empty the work queue before returning from the callback. */
     while (!work_queue.empty()) {
-
+        //
         // TODO sort on priority
-
+        //
         Request job = work_queue.front();
         work_queue.pop();
         if (job.get_type() == "read") { 
